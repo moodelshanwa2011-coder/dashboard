@@ -1,25 +1,19 @@
 import streamlit as st
 import pandas as pd
 
-st.title("📊 Excel Dashboard")
+st.title("📂 Upload Excel File")
 
-# رفع ملف الاكسل
-uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
+# زر رفع الملف
+uploaded_file = st.file_uploader(
+    "اختار ملف Excel",
+    type=["xlsx"]
+)
 
+# بعد الرفع
 if uploaded_file is not None:
     df = pd.read_excel(uploaded_file)
 
-    st.subheader("📄 Data Preview")
+    st.success("تم رفع الملف ✅")
+
+    # عرض البيانات
     st.dataframe(df)
-
-    # اختيار عمود رقمي
-    numeric_cols = df.select_dtypes(include="number").columns
-
-    if len(numeric_cols) > 0:
-        st.subheader("📈 Charts")
-
-        column = st.selectbox("Choose column", numeric_cols)
-
-        st.bar_chart(df[column])
-    else:
-        st.warning("No numeric columns found.")
