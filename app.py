@@ -1,19 +1,14 @@
 import streamlit as st
 import pandas as pd
+import plotly.graph_objects as go
 import time
 
 # 1. إعدادات الصفحة
-st.set_page_config(page_title="ICU AI Advanced Monitor", layout="wide")
+st.set_page_config(page_title="ICU AI Radar Monitor", layout="wide")
 
-# 2. البيانات المستخرجة من PDF (8 مؤشرات مختارة)
-kpi_labels = [
-    "FALLS RATE", "HAPI INDEX", "CLABSI", "VAE EVENTS", 
-    "CAUTI", "RN BSN %", "TURNOVER", "NURSING HRS"
-]
-
-# البيانات مرتبة حسب الأرباع الزمنية الموجودة في الملف 
+# 2. البيانات (8 مؤشرات من ملف الرياض)
+categories = ['FALLS', 'HAPI', 'CLABSI', 'VAE', 'CAUTI', 'RN BSN%', 'TURNOVER', 'NURSING HRS']
 data_history = [
-    # 4Q 2023, 1Q 2024, 2Q 2024, 3Q 2024, 4Q 2024
     [0.00, 26.67, 1.10, 1.05, 0.46, 83.53, 1.60, 19.09],
     [0.24, 6.45, 2.67, 2.42, 0.99, 70.31, 4.49, 12.54],
     [0.24, 14.29, 2.42, 0.00, 0.51, 71.21, 6.25, 19.20],
@@ -22,70 +17,79 @@ data_history = [
 ]
 quarters = ["4Q 2023", "1Q 2024", "2Q 2024", "3Q 2024", "4Q 2024"]
 
-# --- CSS التنسيق المستقبلي (Ultra-Modern) ---
+# --- CSS التنسيق المستقبلي ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
     .stApp { background-color: #05070A; color: white; }
-    
     .main-title {
-        text-align: center; font-family: 'Orbitron'; font-size: 30px;
-        background: linear-gradient(90deg, #00f2ff, #0072ff);
+        text-align: center; font-family: 'Orbitron'; font-size: 32px;
+        background: linear-gradient(90deg, #00f2ff, #7000ff);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        margin-bottom: 5px; text-transform: uppercase; letter-spacing: 3px;
+        letter-spacing: 2px; font-weight: bold; margin-bottom: 20px;
     }
-    
-    /* تصميم الكبسولة المضيئة (Modern Alternative to Circles) */
-    .kpi-capsule {
-        background: rgba(0, 242, 255, 0.02);
-        border: 1px solid rgba(0, 242, 255, 0.15);
-        border-radius: 50px; padding: 15px; text-align: center;
-        transition: 0.5s; box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        margin-bottom: 15px;
+    .modern-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(0, 242, 255, 0.1);
+        border-radius: 15px; padding: 15px; text-align: center;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
     }
-    .kpi-capsule:hover {
-        border-color: #00f2ff; box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
-    }
-    .val-text { font-family: 'Orbitron'; font-size: 22px; color: #00f2ff; font-weight: 700; }
-    .label-text { font-size: 9px; color: #8B949E; letter-spacing: 1px; font-weight: bold; }
+    .val-neon { font-family: 'Orbitron'; font-size: 20px; color: #00f2ff; text-shadow: 0 0 10px #00f2ff; }
+    .label-sub { font-size: 9px; color: #8B949E; text-transform: uppercase; }
     </style>
 """, unsafe_allow_html=True)
 
-# الهيكل العلوي
-st.markdown('<p class="main-title">ICU ADVANCED COMMAND CENTER</p>', unsafe_allow_html=True)
-st.markdown("<p style='text-align:center; color:#444; font-size:12px;'>SAUDI GERMAN HOSPITAL - RIYADH UNIT</p>", unsafe_allow_html=True)
+st.markdown('<p class="main-title">ICU PERFORMANCE RADAR</p>', unsafe_allow_html=True)
 
-# إدارة التحديث
+# إدارة العداد
 if 'step' not in st.session_state: st.session_state.step = 0
 idx = st.session_state.step % len(data_history)
-vals = data_history[idx]
+r_values = data_history[idx]
 
-# عرض الربع الحالي بتنسيق نيون
-st.markdown(f"<div style='text-align:center; margin-bottom:20px;'><span style='background:#00f2ff; color:#000; padding:2px 15px; border-radius:20px; font-family:Orbitron; font-size:12px;'>DATA STREAM: {quarters[idx]}</span></div>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align:center; font-family:Orbitron; color:#8B949E;'>LIVE STREAM: <span style='color:#7000ff;'>{quarters[idx]}</span></p>", unsafe_allow_html=True)
 
-# 3. عرض الـ 8 مؤشرات (صفين في 4 أعمدة)
-row1_cols = st.columns(4)
-row2_cols = st.columns(4)
-all_cols = row1_cols + row2_cols
-
+# 3. عرض المؤشرات (8 كبسولات نيون)
+cols = st.columns(8)
 for i in range(8):
-    all_cols[i].markdown(f"""
-        <div class="kpi-capsule">
-            <div class="label-text">{kpi_labels[i]}</div>
-            <div class="val-text">{vals[i]}</div>
+    cols[i].markdown(f"""
+        <div class="modern-card">
+            <div class="label-sub">{categories[i]}</div>
+            <div class="val-neon">{r_values[i]}</div>
         </div>
     """, unsafe_allow_html=True)
 
 st.write("---")
 
-# 4. البار تشارت "السمباتيك" والمستقر (بدون مكتبات خارجية لتجنب Error)
-st.markdown("<p style='text-align:center; color:#555; font-family:Orbitron; font-size:10px;'>LIVE PERFORMANCE ANALYTICS</p>", unsafe_allow_html=True)
-
+# 4. الرادار تشارت (أحدث وأقوى شكل بياني للذكاء الاصطناعي)
 _, center_col, _ = st.columns([0.5, 2, 0.5])
 with center_col:
-    # استخدام الرسم البياني المدمج في Streamlit (مستقر 100%)
-    chart_df = pd.DataFrame({'Score': vals}, index=kpi_labels)
-    st.bar_chart(chart_df, color="#00f2ff", use_container_width=True)
+    # بناء الرادار
+    fig = go.Figure()
+    fig.add_trace(go.Scatterpolar(
+        r=r_values + [r_values[0]], # لغلق الدائرة
+        theta=categories + [categories[0]],
+        fill='toself',
+        fillcolor='rgba(0, 242, 255, 0.2)',
+        line=dict(color='#00f2ff', width=2),
+        marker=dict(color='#7000ff', size=8),
+        name=quarters[idx]
+    ))
+
+    fig.update_layout(
+        polar=dict(
+            bgcolor="rgba(0,0,0,0)",
+            radialaxis=dict(visible=True, range=[0, 100], gridcolor="rgba(255,255,255,0.05)", showticklabels=False),
+            angularaxis=dict(gridcolor="rgba(255,255,255,0.05)", tickfont=dict(family="Orbitron", size=10, color="#8B949E"))
+        ),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        height=500,
+        margin=dict(l=80, r=80, t=20, b=20),
+        showlegend=False
+    )
+
+    # عرض الرادار مع Key ديناميكي لمنع الـ Error
+    st.plotly_chart(fig, use_container_width=True, key=f"radar_{st.session_state.step}")
 
 # التحديث التلقائي
 time.sleep(10)
