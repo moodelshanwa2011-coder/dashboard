@@ -1,19 +1,11 @@
 import streamlit as st
 import pandas as pd
 
-st.title("📂 Upload Excel File")
+st.title("Upload Excel Dashboard")
 
-# زر رفع الملف
-uploaded_file = st.file_uploader(
-    "اختار ملف Excel",
-    type=["xlsx"]
-)
+uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
 
-# بعد الرفع
-if uploaded_file is not None:
+if uploaded_file:
     df = pd.read_excel(uploaded_file)
-
-    st.success("تم رفع الملف ✅")
-
-    # عرض البيانات
+    st.write("File uploaded successfully ✅")
     st.dataframe(df)
