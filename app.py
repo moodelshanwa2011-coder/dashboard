@@ -1,70 +1,77 @@
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-import time
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<style>
 
-# ======================
-# PAGE SETUP
-# ======================
-st.set_page_config(layout="wide")
-st.title("🟢 LIVE KPI DASHBOARD")
+body{
+    font-family: Arial;
+    text-align:center;
+}
 
-# ======================
-# FILE UPLOAD
-# ======================
-file = st.file_uploader("Upload Excel File", type=["xlsx"])
+/* اخفاء الجدول */
+table{
+    display:none;
+}
 
-if file:
+/* شكل الدوائر */
+.circle{
+    width:100px;
+    height:100px;
+    border-radius:50%;
+    background:#4CAF50;
+    color:white;
+    display:inline-flex;
+    justify-content:center;
+    align-items:center;
+    font-size:22px;
+    margin:10px;
+}
 
-    # قراءة الشيتات
-    sheets = pd.ExcelFile(file).sheet_names
-    sheet = st.selectbox("Choose Sheet", sheets)
+</style>
+</head>
+<body>
 
-    # قراءة البيانات
-    df = pd.read_excel(file, sheet_name=sheet)
-    df.columns = df.columns.str.strip()
+<h2 id="monthName"></h2>
 
-    st.subheader("Data Preview")
-    st.dataframe(df, use_container_width=True)
+<div id="circles"></div>
 
-    # اختيار الأعمدة
-    text_col = st.selectbox("KPI Column", df.columns)
-    num_col = st.selectbox("Value Column", df.columns)
+<script>
 
-    # ======================
-    # CREATE DASHBOARD
-    # ======================
-    if st.button("Create Dashboard"):
+const months = [
+    {name:"يناير", values:[10,20,30]},
+    {name:"فبراير", values:[15,25,35]},
+    {name:"مارس", values:[12,22,32]},
+    {name:"ابريل", values:[18,28,38]}
+];
 
-        # تحويل للأرقام (منع الأخطاء)
-        df[num_col] = pd.to_numeric(df[num_col], errors="coerce")
-        df = df.dropna(subset=[num_col])
+let index = 0;
 
-        # ===== KPI METRICS =====
-        c1, c2, c3, c4 = st.columns(4)
+function showMonth(){
+    const month = months[index];
 
-        c1.metric("Rows", len(df))
-        c2.metric("Total", round(df[num_col].sum(), 2))
-        c3.metric("Average", round(df[num_col].mean(), 2))
-        c4.metric("Max", round(df[num_col].max(), 2))
+    document.getElementById("monthName").innerText = month.name;
 
-        st.divider()
+    let html = "";
+    month.values.forEach(num=>{
+        html += `<div class="circle">${num}</div>`;
+    });
 
-        # ===== CHART =====
-        fig = px.bar(
-            df,
-            x=text_col,
-            y=num_col,
-            title="Live KPI Performance"
-        )
+    document.getElementById("circles").innerHTML = html;
 
-        st.plotly_chart(fig, use_container_width=True)
+    index++;
+    if(index >= months.length){
+        index = 0;
+    }
+}
 
-else:
-    st.info("⬆️ Upload Excel file to start")
+/* عرض أول شهر */
+showMonth();
 
-# ======================
-# AUTO REFRESH (LIVE)
-# ======================
-time.sleep(30)
-st.rerun()
+/* تغيير كل 10 ثواني */
+setInterval(showMonth, 10000);
+
+</script>
+
+</body>
+</html>
