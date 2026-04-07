@@ -5,102 +5,106 @@ import time
 
 st.set_page_config(layout="wide")
 
-# ---------- STYLE ----------
+# ---------- PROFESSIONAL STYLE ----------
 st.markdown("""
 <style>
 
-body {
-    background: linear-gradient(135deg,#0b1220,#111827,#020617);
+html, body, [class*="css"] {
+    background:#0b1220;
     color:white;
+    font-family: 'Segoe UI', sans-serif;
 }
 
 .title{
     text-align:center;
-    font-size:44px;
-    font-weight:bold;
+    font-size:42px;
+    font-weight:600;
+    margin-bottom:5px;
 }
 
 .month{
     text-align:center;
-    font-size:22px;
-    color:#cbd5e1;
-    margin-bottom:30px;
+    color:#94a3b8;
+    margin-bottom:35px;
 }
 
-.container{
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
+.grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+    gap:25px;
+    padding:10px 40px;
 }
 
-.kpi-block{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    margin:18px;
+.card{
+    background:#111827;
+    border-radius:18px;
+    padding:20px;
+    text-align:center;
+    box-shadow:0 6px 20px rgba(0,0,0,0.4);
 }
 
 .kpi-name{
-    margin-bottom:10px;
-    color:#94a3b8;
-    font-size:15px;
+    font-size:14px;
+    color:#9ca3af;
+    min-height:45px;
+    margin-bottom:15px;
 }
 
 .circle{
-    width:160px;
-    height:160px;
+    width:130px;
+    height:130px;
+    margin:auto;
     border-radius:50%;
-    background:#1f2937;
+    background:linear-gradient(145deg,#1f2937,#020617);
     display:flex;
-    justify-content:center;
     align-items:center;
-    font-size:34px;
+    justify-content:center;
+    font-size:28px;
     font-weight:bold;
-    box-shadow:0 0 30px rgba(0,150,255,0.4);
+    box-shadow:0 0 18px rgba(59,130,246,0.4);
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- LOAD DATA ----------
+# ---------- LOAD EXCEL ----------
 df = pd.read_excel("GlobCare -KPI_Dashboard_v5.xlsx")
 
 months = df.iloc[:,0]
 metrics = df.columns[1:]
 
-top = st.empty()
+header = st.empty()
 chart_area = st.empty()
 
-# ---------- LIVE LOOP ----------
+# ---------- LIVE DASHBOARD ----------
 while True:
+
     for i in range(len(df)):
 
-        # ===== KPI CIRCLES =====
-        blocks = ""
-
+        cards = ""
         values = []
 
         for metric in metrics:
             value = df.loc[i, metric]
             values.append(value)
 
-            blocks += f"""
-<div class="kpi-block">
-<div class="kpi-name">{metric}</div>
-<div class="circle">{value}</div>
-</div>
-"""
+            cards += f"""
+            <div class="card">
+                <div class="kpi-name">{metric}</div>
+                <div class="circle">{value}</div>
+            </div>
+            """
 
-        top.markdown(f"""
-<div class="title">GlobCare Performance Dashboard</div>
-<div class="month">Month: {months[i]}</div>
+        header.markdown(f"""
+        <div class="title">GlobCare Performance Dashboard</div>
+        <div class="month">Month: {months[i]}</div>
 
-<div class="container">
-{blocks}
-</div>
-""", unsafe_allow_html=True)
+        <div class="grid">
+        {cards}
+        </div>
+        """, unsafe_allow_html=True)
 
-        # ===== BAR CHART =====
+        # -------- BAR CHART ----------
         chart_df = pd.DataFrame({
             "KPI": metrics,
             "Value": values
@@ -115,9 +119,11 @@ while True:
         )
 
         fig.update_layout(
-            plot_bgcolor="#020617",
-            paper_bgcolor="#020617",
-            font_color="white"
+            plot_bgcolor="#0b1220",
+            paper_bgcolor="#0b1220",
+            font_color="white",
+            xaxis_title="",
+            yaxis_title=""
         )
 
         chart_area.plotly_chart(fig, use_container_width=True)
