@@ -2,33 +2,23 @@ import streamlit as st
 import pandas as pd
 import time
 
-# ---------- PAGE CONFIG ----------
-st.set_page_config(
-    page_title="GlobCare Dashboard",
-    layout="wide"
-)
+st.set_page_config(layout="wide")
 
-# ---------- DARK STYLE ----------
+# ---------- STYLE ----------
 st.markdown("""
 <style>
-
-body {
-    background-color:#0E1117;
-}
-
 .title{
     text-align:center;
-    font-size:42px;
-    font-weight:700;
+    font-size:40px;
     color:white;
-    margin-top:10px;
+    font-weight:bold;
 }
 
 .month{
     text-align:center;
-    font-size:22px;
-    color:#9CA3AF;
-    margin-bottom:30px;
+    font-size:20px;
+    color:gray;
+    margin-bottom:25px;
 }
 
 .container{
@@ -38,73 +28,66 @@ body {
 }
 
 .circle{
-    width:170px;
-    height:170px;
+    width:150px;
+    height:150px;
     border-radius:50%;
-    background:linear-gradient(145deg,#1f2937,#111827);
-    box-shadow:
-        0 0 30px rgba(0,150,255,0.35),
-        inset 0 0 15px rgba(255,255,255,0.05);
+    background:#1f2937;
     color:white;
     display:flex;
     flex-direction:column;
     justify-content:center;
     align-items:center;
-    margin:18px;
-    transition:0.4s;
-}
-
-.circle:hover{
-    transform:scale(1.06);
+    margin:15px;
+    box-shadow:0 0 20px rgba(0,150,255,0.4);
 }
 
 .kpi-name{
-    font-size:15px;
+    font-size:14px;
     color:#9CA3AF;
     text-align:center;
-    padding:0 10px;
 }
 
 .kpi-value{
-    font-size:36px;
+    font-size:30px;
     font-weight:bold;
-    margin-top:8px;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- LOAD EXCEL ----------
+# ---------- LOAD DATA ----------
 df = pd.read_excel("GlobCare -KPI_Dashboard_v5.xlsx")
 
-months = df.iloc[:, 0]      # أول عمود = الشهر
-metrics = df.columns[1:]    # باقي الأعمدة = أسماء KPI
+months = df.iloc[:,0]
+metrics = df.columns[1:]
 
 placeholder = st.empty()
 
-# ---------- LIVE AUTO REFRESH ----------
+# ---------- LIVE DISPLAY ----------
 while True:
     for i in range(len(df)):
 
-        circles_html = ""
+        html = ""
 
         for metric in metrics:
             value = df.loc[i, metric]
 
-            circles_html += f"""
-            <div class="circle">
-                <div class="kpi-name">{metric}</div>
-                <div class="kpi-value">{value}</div>
-            </div>
-            """
+            html += f"""
+<div class="circle">
+<div class="kpi-name">{metric}</div>
+<div class="kpi-value">{value}</div>
+</div>
+"""
 
-        placeholder.markdown(f"""
-        <div class="title">GlobCare Performance Dashboard</div>
-        <div class="month">Month: {months[i]}</div>
+        placeholder.markdown(
+            f"""
+<div class="title">GlobCare Dashboard</div>
+<div class="month">Month: {months[i]}</div>
 
-        <div class="container">
-            {circles_html}
-        </div>
-        """, unsafe_allow_html=True)
+<div class="container">
+{html}
+</div>
+""",
+            unsafe_allow_html=True
+        )
 
         time.sleep(10)
