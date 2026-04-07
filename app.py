@@ -1,57 +1,38 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import time
+from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(layout="wide")
 
 st.title("GlobCare Performance Dashboard")
 
-# قراءة ملف الاكسل
+# تحديث الصفحة كل 10 ثواني
+count = st_autorefresh(interval=10000, key="refresh")
+
+# قراءة الاكسل
 df = pd.read_excel("GlobCare -KPI_Dashboard_v5.xlsx")
 
-months = df.iloc[:, 0]
-kpis = df.columns[1:]
+# تحديد الشهر الحالي تلقائياً
+row_index = count % len(df)
 
-placeholder = st.empty()
+month = df.iloc[row_index, 0]
+data = df.iloc[row_index, 1:]
 
-# تشغيل لايف
-while True:
+st.subheader(f"Month: {month}")
 
-    for i in range(len(df)):
+# ===== KPI BOXES =====
+cols = st.columns(len(data))
 
-        with placeholder.container():
+for col, (name, value) in zip(cols, data.items()):
+    col.metric(label=name, value=value)
 
-            st.subheader(f"Month: {months[i]}")
+# ===== CHART =====
+chart_df = pd.DataFrame({
+    "KPI": data.index,
+    "Value": data.values
+})
 
-            # ===== KPI CIRCLES =====
-            cols = st.columns(len(kpis))
+fig = px.bar(chart_df, x="KPI", y="Value", text="Value")
 
-            values = []
-
-            for col, kpi in zip(cols, kpis):
-
-                value = df.loc[i, kpi]
-                values.append(value)
-
-                col.metric(
-                    label=kpi,
-                    value=value
-                )
-
-            # ===== BAR CHART =====
-            chart_df = pd.DataFrame({
-                "KPI": kpis,
-                "Value": values
-            })
-
-            fig = px.bar(
-                chart_df,
-                x="KPI",
-                y="Value",
-                text="Value"
-            )
-
-            st.plotly_chart(fig, use_container_width=True)
-
-        time.sleep(10)
+st.plotly_chart(fig, use_container_width=True)
