@@ -4,9 +4,9 @@ import plotly.graph_objects as go
 import time
 
 # 1. إعدادات الصفحة
-st.set_page_config(page_title="ICU Smart Dashboard", layout="wide")
+st.set_page_config(page_title="ICU Performance Monitor", layout="wide")
 
-# 2. البيانات والـ Benchmarks (من ملف الرياض)
+# 2. البيانات والـ Benchmarks (مستخرجة من ملف الرياض)
 kpi_labels = ['FALLS RATE', 'HAPI INDEX', 'CLABSI', 'VAE EVENTS', 'CAUTI', 'RN BSN %', 'TURNOVER', 'NURSING HRS']
 benchmarks = [0.14, 4.96, 1.26, 1.91, 0.43, 83.78, 3.97, 13.00] 
 
@@ -19,14 +19,14 @@ data_history = [
 ]
 quarters = ["4Q 2023", "1Q 2024", "2Q 2024", "3Q 2024", "4Q 2024"]
 
-# --- CSS التنسيق النهائي (النسخة النظيفة) ---
+# --- التنسيق البصري النهائي ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
     .stApp { background-color: #05070A; color: white; }
     .main-title { text-align: center; font-family: 'Orbitron'; font-size: 32px; color: #00f2ff; font-weight: bold; margin-bottom: 25px; }
     
-    .big-kpi-card { border-radius: 20px; padding: 25px 10px; text-align: center; margin-bottom: 12px; transition: 0.6s; }
+    .big-kpi-card { border-radius: 20px; padding: 25px 10px; text-align: center; margin-bottom: 15px; transition: 0.6s; }
     .normal { background: rgba(0, 242, 255, 0.03); border: 1px solid rgba(0, 242, 255, 0.2); }
     .critical { background: rgba(255, 0, 0, 0.15); border: 2px solid #ff0000; box-shadow: 0 0 25px rgba(255, 0, 0, 0.4); }
     
@@ -40,13 +40,14 @@ st.markdown("""
 
 st.markdown('<p class="main-title">ICU PERFORMANCE INTELLIGENCE</p>', unsafe_allow_html=True)
 
+# إدارة العداد للتحديث التلقائي
 if 'step' not in st.session_state: st.session_state.step = 0
 idx = st.session_state.step % len(data_history)
 vals = data_history[idx]
 
-st.markdown(f"<p style='text-align:center; font-family:Orbitron; color:#8B949E; font-size:16px;'>MONITORING: <span style='color:#00f2ff;'>{quarters[idx]}</span></p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align:center; font-family:Orbitron; color:#8B949E;'>CURRENT STREAM: <span style='color:#00f2ff;'>{quarters[idx]}</span></p>", unsafe_allow_html=True)
 
-# 3. عرض الكبسولات الذكية (8 مؤشرات)
+# 1. قسم الكبسولات العلوية (8 مؤشرات)
 row1 = st.columns(4)
 row2 = st.columns(4)
 all_cols = row1 + row2
@@ -65,17 +66,17 @@ for i in range(8):
         <div class="big-kpi-card {card_class}">
             <div class="big-label">{kpi_labels[i]}</div>
             <div class="big-val {text_class}">{vals[i]}</div>
-            <div style="font-size:9px; color:#444; margin-top:8px;">BENCHMARK: {benchmarks[i]}</div>
+            <div style="font-size:9px; color:#555; margin-top:8px;">REF: {benchmarks[i]}</div>
         </div>
     """, unsafe_allow_html=True)
 
 st.write("---")
 
-# 4. منطقة العرض الأساسية (الدائرة يساراً والبار العرضي يميناً)
+# 2. منطقة العرض الرئيسية (الدائرة يساراً والبار العرضي يميناً)
 col_left, col_right = st.columns([1, 1.1])
 
 with col_left:
-    # حساب نتيجة الأمان الإجمالية
+    # حساب نسبة الأمان العامة
     safe_count = sum(1 for i in range(8) if not (
         (kpi_labels[i] in ['RN BSN %', 'NURSING HRS'] and vals[i] < benchmarks[i]) or 
         (kpi_labels[i] not in ['RN BSN %', 'NURSING HRS'] and vals[i] > benchmarks[i])
@@ -95,7 +96,7 @@ with col_left:
     st.plotly_chart(fig_donut, use_container_width=True, key=f"donut_{st.session_state.step}")
 
 with col_right:
-    # البار العرضي (Horizontal Bar Chart)
+    # البار العرضي فقط (Horizontal Bar)
     fig_hbar = go.Figure(go.Bar(
         x=vals, y=kpi_labels, orientation='h',
         marker=dict(color=vals, colorscale='Viridis', line=dict(color='#fff', width=0.5)),
@@ -110,7 +111,9 @@ with col_right:
     )
     st.plotly_chart(fig_hbar, use_container_width=True, key=f"hbar_{st.session_state.step}")
 
-# 5. التحديث التلقائي
+# ملاحظة: لا يوجد أي كود هنا لعرض رسومات إضافية في الأسفل
+
+# 5. التحديث التلقائي كل 10 ثوانٍ
 time.sleep(10)
 st.session_state.step += 1
 st.rerun()
