@@ -1,98 +1,110 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>KPI Dashboard</title>
+import streamlit as st
+import pandas as pd
+import time
 
-<style>
+# إعدادات الصفحة لتكون عريضة واحترافية
+st.set_page_config(page_title="ICU KPI Dashboard", layout="wide")
 
-body{
-    font-family: Arial, sans-serif;
-    background:#f4f6f8;
-    text-align:center;
+# 1. تعريف عناوين الـ KPIs والقيم القصوى لكل منها (لضبط شريط التقدم)
+kpi_configs = [
+    {"title": "Patient Falls Rate", "max": 2.0},
+    {"title": "HAPI (Pressure Injuries)", "max": 30.0},
+    {"title": "CLABSI (Infections)", "max": 5.0},
+    {"title": "VAE (Ventilator Events)", "max": 7.0},
+    {"title": "Nurse Turnover %", "max": 10.0}
+]
+
+# 2. البيانات المستخرجة من جدول الصورة (دوران ربع سنوي)
+quarterly_data = {
+    "4Q 2023": [0.00, 26.67, 1.10, 1.05, 1.40],
+    "1Q 2024": [0.24, 6.45, 2.67, 2.42, 4.34],
+    "2Q 2024": [0.24, 14.29, 2.42, 0.00, 6.25],
+    "3Q 2024": [0.36, 6.90, 2.63, 1.40, 4.69],
+    "4Q 2024": [0.00, 9.68, 1.10, 1.40, 1.35]
 }
 
-/* ===== Title ===== */
-.main-title{
-    font-size:28px;
-    font-weight:bold;
-    margin:30px 0;
-}
+quarters = list(quarterly_data.keys())
 
-/* ===== Container ===== */
-.kpi-container{
-    display:flex;
-    justify-content:center;
-    gap:25px;
-    flex-wrap:wrap;
-}
+# إدارة التحديث التلقائي كل 10 ثواني
+if 'index' not in st.session_state:
+    st.session_state.index = 0
 
-/* ===== Box ===== */
-.kpi-box{
-    background:white;
-    padding:20px;
-    border-radius:12px;
-    width:140px;
-    box-shadow:0 4px 10px rgba(0,0,0,0.1);
-}
+current_q = quarters[st.session_state.index % len(quarters)]
+values = quarterly_data[current_q]
 
-/* ===== Name ===== */
-.kpi-name{
-    font-size:18px;
-    margin-bottom:15px;
-    font-weight:bold;
-}
-
-/* ===== Circle ===== */
-.circle{
-    width:80px;
-    height:80px;
-    border-radius:50%;
-    border:6px solid #2c7be5;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:18px;
-    font-weight:bold;
-    margin:auto;
-    color:#2c7be5;
-}
-
-</style>
-</head>
-
-<body>
-
-<div class="main-title">Patient Safety Indicators</div>
-
-<div class="kpi-container">
-
-    <div class="kpi-box">
-        <div class="kpi-name">Injury</div>
-        <div class="circle">0.01</div>
+# --- العنوان الكبير في منتصف الصفحة ---
+st.markdown(f"""
+    <div style="text-align: center; margin-top: -50px; margin-bottom: 50px;">
+        <h1 style="font-size: 50px; color: #2c3e50; font-family: 'Arial';">
+            ICU DYNAMIC PERFORMANCE DASHBOARD
+        </h1>
+        <h2 style="color: #3498db; font-weight: normal;">
+            Monitoring Period: {current_q}
+        </h2>
     </div>
+""", unsafe_allow_html=True)
 
-    <div class="kpi-box">
-        <div class="kpi-name">Pressure</div>
-        <div class="circle">9.54</div>
-    </div>
+st.write("---")
 
-    <div class="kpi-box">
-        <div class="kpi-name">CLABSI</div>
-        <div class="circle">1.8</div>
-    </div>
+# إنشاء 5 أعمدة لكل KPI
+cols = st.columns(len(kpi_configs))
 
-    <div class="kpi-box">
-        <div class="kpi-name">VAE</div>
-        <div class="circle">1.1</div>
-    </div>
+for i, col in enumerate(cols):
+    val = values[i]
+    max_val = kpi_configs[i]["max"]
+    title = kpi_configs[i]["title"]
+    
+    # حساب النسبة المئوية لشريط التقدم
+    progress_val = min((val / max_val), 1.0) 
+    
+    # تحديد اللون: أخضر للأداء الجيد، أحمر للتنبيه
+    color = "#2ecc71" if val < (max_val * 0.4) else "#e74c3c"
+    
+    with col:
+        # 1. العنوان فوق الدائرة (مركز في المنتصف)
+        st.markdown(f"""
+            <div style="text-align: center; height: 50px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                <span style="font-weight: bold; font-size: 18px; color: #34495e;">{title}</span>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        # 2. الدائرة الرقمية بتصميم CSS متطور
+        st.markdown(f"""
+            <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                <div style="
+                    width: 110px; 
+                    height: 110px; 
+                    border-radius: 50%; 
+                    border: 6px solid {color}; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    font-size: 26px; 
+                    font-weight: bold;
+                    color: #2c3e50;
+                    background-color: #f8f9fa;
+                    box-shadow: 0px 4px 15px {color}66;">
+                    {val}
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        # 3. شريط التقدم (Bar) أسفل الدائرة
+        st.progress(progress_val)
 
-    <div class="kpi-box">
-        <div class="kpi-name">CAUTI</div>
-        <div class="circle">1.13</div>
-    </div>
+# --- الرسم البياني في الأسفل ---
+st.write("---")
+st.subheader("📊 Live Comparative Trend")
+chart_df = pd.DataFrame({
+    'KPI Metrics': [k['title'] for k in kpi_configs],
+    'Current Value': values
+})
+st.bar_chart(chart_df.set_index('KPI Metrics'))
 
-</div>
+# --- تذييل الصفحة وتوقيت التحديث ---
+st.caption(f"Last updated: {time.strftime('%H:%M:%S')} - Data switches every 10 seconds.")
 
-</body>
-</html>
+# آلية التكرار التلقائي
+time.sleep(10)
+st.session_state.index += 1
+st.rerun()
