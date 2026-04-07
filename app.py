@@ -19,18 +19,19 @@ data_history = [
 ]
 quarters = ["4Q 2023", "1Q 2024", "2Q 2024", "3Q 2024", "4Q 2024"]
 
-# --- التنسيق البصري الاحترافي ---
+# --- CSS التنسيق النهائي (Modern & Clean) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
     .stApp { background-color: #05070A; color: white; }
-    .main-title { text-align: center; font-family: 'Orbitron'; font-size: 30px; color: #00f2ff; font-weight: bold; margin-bottom: 20px; }
+    .main-title { text-align: center; font-family: 'Orbitron'; font-size: 32px; color: #00f2ff; font-weight: bold; margin-bottom: 25px; }
     
+    /* تصميم الكبسولات */
     .big-kpi-card { border-radius: 20px; padding: 25px 10px; text-align: center; margin-bottom: 15px; transition: 0.6s; }
     .normal { background: rgba(0, 242, 255, 0.03); border: 1px solid rgba(0, 242, 255, 0.2); }
     .critical { background: rgba(255, 0, 0, 0.15); border: 2px solid #ff0000; box-shadow: 0 0 25px rgba(255, 0, 0, 0.4); }
     
-    .big-val { font-family: 'Orbitron'; font-size: 32px; font-weight: bold; }
+    .big-val { font-family: 'Orbitron'; font-size: 34px; font-weight: bold; }
     .color-normal { color: #00f2ff; text-shadow: 0 0 10px #00f2ff; }
     .color-critical { color: #ff0000; text-shadow: 0 0 15px #ff0000; }
     
@@ -46,7 +47,7 @@ vals = data_history[idx]
 
 st.markdown(f"<p style='text-align:center; font-family:Orbitron; color:#8B949E;'>STREAM: <span style='color:#00f2ff;'>{quarters[idx]}</span></p>", unsafe_allow_html=True)
 
-# 1. الكبسولات العلوية (تم الحفاظ عليها وتكبيرها)
+# 1. عرض الكبسولات العلوية (8 مؤشرات)
 row1 = st.columns(4)
 row2 = st.columns(4)
 all_cols = row1 + row2
@@ -64,53 +65,4 @@ for i in range(8):
     all_cols[i].markdown(f"""
         <div class="big-kpi-card {card_class}">
             <div class="big-label">{kpi_labels[i]}</div>
-            <div class="big-val {text_class}">{vals[i]}</div>
-            <div style="font-size:9px; color:#555; margin-top:8px;">REF: {benchmarks[i]}</div>
-        </div>
-    """, unsafe_allow_html=True)
-
-st.write("---")
-
-# 2. منطقة العرض الأساسية (الدائرة والبار العرضي فقط)
-col_left, col_right = st.columns([1, 1.2])
-
-with col_left:
-    # حساب نسبة الأمان العامة
-    safe_count = sum(1 for i in range(8) if not (
-        (kpi_labels[i] in ['RN BSN %', 'NURSING HRS'] and vals[i] < benchmarks[i]) or 
-        (kpi_labels[i] not in ['RN BSN %', 'NURSING HRS'] and vals[i] > benchmarks[i])
-    ))
-    safety_score = (safe_count / 8) * 100
-
-    fig_donut = go.Figure(go.Pie(
-        values=vals, labels=kpi_labels, hole=.8,
-        marker=dict(colors=['#00f2ff', '#7000ff', '#0072ff', '#00d4ff', '#00b4ff', '#0094ff', '#0074ff', '#0054ff']),
-        textinfo='none'
-    ))
-    fig_donut.update_layout(
-        annotations=[dict(text=f'{int(safety_score)}%<br><span style="font-size:12px">SAFETY</span>', 
-                     x=0.5, y=0.5, font_size=28, font_family="Orbitron", font_color="#00f2ff", showarrow=False)],
-        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=400, showlegend=False, margin=dict(t=0, b=0, l=0, r=0)
-    )
-    st.plotly_chart(fig_donut, use_container_width=True, key=f"donut_{st.session_state.step}")
-
-with col_right:
-    # البار العرضي المفضل لديك
-    fig_hbar = go.Figure(go.Bar(
-        x=vals, y=kpi_labels, orientation='h',
-        marker=dict(color=vals, colorscale='Viridis', line=dict(color='#fff', width=0.5)),
-        text=vals, textposition='outside', textfont=dict(color='#fff', family='Orbitron', size=11)
-    ))
-    fig_hbar.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=400,
-        margin=dict(l=120, r=60, t=10, b=10),
-        xaxis=dict(gridcolor='rgba(255,255,255,0.05)', tickfont=dict(color='#8B949E')),
-        yaxis=dict(tickfont=dict(color='#00f2ff', family='Orbitron', size=10), autorange="reversed"),
-        showlegend=False
-    )
-    st.plotly_chart(fig_hbar, use_container_width=True, key=f"hbar_{st.session_state.step}")
-
-# 3. التحديث التلقائي
-time.sleep(10)
-st.session_state.step += 1
-st.rerun()
+            <div
