@@ -1,62 +1,117 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-# إعداد الصفحة لتكون بعرض كامل
-st.set_page_config(layout="wide")
+# إعدادات الصفحة الاحترافية والحديثة
+st.set_page_config(
+    page_title="ICU Riyadh | Performance Dashboard",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-# كود الـ HTML والـ JS الخاص بك
-html_code = """
+# كود الواجهة العصري بلمسات "Glassmorphism" و "Neon" (HTML/CSS/JS)
+dashboard_html = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: sans-serif; background-color: #f0f4f8; margin: 0; padding: 10px; }
-        .header { text-align: center; padding: 20px; background: #fff; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; border-top: 5px solid #0056b3; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-        .card { background: #fff; border-radius: 15px; padding: 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        .circle { width: 80px; height: 80px; border-radius: 50%; border: 6px solid #007bff; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; color: #007bff; }
-        .label { font-weight: bold; color: #4a5568; font-size: 0.9rem; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h2 style="color:#0056b3; margin:0;">لوحة مؤشرات ICU - الرياض</h2>
-        <div style="margin-top:10px; font-weight:bold; color:#0056b3" id="qLabel">4Q 2023</div>
-    </div>
-    <div class="grid" id="kpiGrid"></div>
-    <div style="background:white; margin-top:20px; padding:20px; border-radius:15px;"><canvas id="barChart" height="100"></canvas></div>
-
-    <script>
-        const data = [
-            { q: "4Q 2023", v: [0, 7.3, 1.3, 1.5, 0, 5.2, 67, 13], b: [0.04, 26, 1.3, 1, 0.4, 1.6, 83, 8] },
-            { q: "1Q 2024", v: [0.2, 6.4, 1.2, 2.1, 0.7, 4.8, 83, 20], b: [0.09, 7.7, 2.6, 2.4, 0.9, 4.4, 70, 19] },
-            { q: "2Q 2024", v: [0, 6.5, 1.5, 2, 0.6, 3.7, 82, 18], b: [0.2, 14, 2.4, 1, 0.5, 6.2, 71, 12] }
-        ];
-        const labels = ["سقوط", "HAPI", "CLABSI", "VAE", "CAUTI", "Turnover", "BSN", "Hours"];
-        let idx = 0; let chart;
-
-        function update() {
-            const cur = data[idx];
-            document.getElementById('qLabel').innerText = cur.q;
-            const grid = document.getElementById('kpiGrid');
-            grid.innerHTML = '';
-            cur.v.forEach((val, i) => {
-                grid.innerHTML += `<div class="card"><div class="circle">${val}</div><div class="label">${labels[i]}</div></div>`;
-            });
-            if(!chart) {
-                chart = new Chart(document.getElementById('barChart'), {
-                    type: 'bar', data: { labels: labels, datasets: [{ data: cur.v, backgroundColor: '#007bff' }] }
-                });
-            } else { chart.data.datasets[0].data = cur.v; chart.update(); }
-            idx = (idx + 1) % data.length;
+        :root {
+            --bg-base: #0a0e17;
+            --glass-base: rgba(30, 41, 59, 0.6);
+            --glass-accent: rgba(56, 189, 248, 0.1);
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --neon-cyan: #38bdf8;
+            --neon-rose: #fb7185;
+            --font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
-        update(); setInterval(update, 5000);
-    </script>
-</body>
-</html>
-"""
 
-# عرض الكود داخل Streamlit
-components.html(html_code, height=800, scrolling=True)
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+        }
+
+        .dashboard-wrapper {
+            width: 100%;
+            max-width: 1300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* رأس الصفحة العصري */
+        .modern-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: var(--glass-base);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .title-group h1 { margin: 0; font-size: 1.6rem; color: var(--neon-cyan); text-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+        .title-group p { margin: 5px 0 0 0; color: var(--text-dim); font-size: 0.9rem; }
+        
+        .q-badge-modern {
+            background: var(--neon-cyan);
+            color: #0a0e17;
+            padding: 10px 30px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.3rem;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+            transition: all 0.3s;
+        }
+
+        /* شبكة الكروت "Glassmorphism" الـ 8 */
+        .modern-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .modern-card {
+            background: var(--glass-base);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modern-card:hover { 
+            transform: translateY(-8px); 
+            border-color: rgba(56, 189, 248, 0.3); 
+            background: var(--glass-accent);
+            box-shadow: 0 10px 30px rgba(56, 189, 248, 0.1);
+        }
+
+        .stat-circle-modern {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            border: 5px solid rgba(255, 255, 255, 0.05);
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight
