@@ -1,138 +1,98 @@
-import streamlit as st
-import pandas as pd
-import time
-import plotly.express as px
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>KPI Dashboard</title>
 
-st.set_page_config(layout="wide")
-
-# ======================
-# AUTO REFRESH (10 sec)
-# ======================
-if "counter" not in st.session_state:
-    st.session_state.counter = 0
-
-time.sleep(10)
-st.session_state.counter += 1
-st.rerun()
-
-# ======================
-# SAMPLE DATA (من الصورة)
-# ======================
-data = [
-    ["Jan-2026",0.01,9.54,1.8,1.1,1.13],
-    ["Feb-2026",0.02,6.67,3.02,6.69,0.54],
-    ["Mar-2026",0.00,3.33,3.87,3.39,0.94],
-]
-
-df = pd.DataFrame(data,
-columns=["Month","Injury","Pressure","CLABSI","VAE","CAUTI"])
-
-row = df.iloc[st.session_state.counter % len(df)]
-
-# ======================
-# PROFESSIONAL STYLE
-# ======================
-st.markdown("""
 <style>
 
-.stApp{
-background: linear-gradient(135deg,#020617,#0f172a);
-color:white;
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f6f8;
+    text-align:center;
 }
 
-.title{
-text-align:center;
-font-size:42px;
-font-weight:bold;
-margin-bottom:10px;
+/* ===== Title ===== */
+.main-title{
+    font-size:28px;
+    font-weight:bold;
+    margin:30px 0;
 }
 
-.month{
-text-align:center;
-font-size:20px;
-color:#94a3b8;
-margin-bottom:40px;
+/* ===== Container ===== */
+.kpi-container{
+    display:flex;
+    justify-content:center;
+    gap:25px;
+    flex-wrap:wrap;
 }
 
-.kpi-grid{
-display:flex;
-justify-content:center;
-gap:45px;
-flex-wrap:wrap;
-margin-bottom:50px;
-}
-
+/* ===== Box ===== */
 .kpi-box{
-text-align:center;
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    width:140px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
 }
 
+/* ===== Name ===== */
 .kpi-name{
-font-size:20px;
-margin-bottom:15px;
-color:#cbd5e1;
-font-weight:600;
+    font-size:18px;
+    margin-bottom:15px;
+    font-weight:bold;
 }
 
+/* ===== Circle ===== */
 .circle{
-width:140px;
-height:140px;
-border-radius:50%;
-background:#1e293b;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:28px;
-font-weight:bold;
-box-shadow:0 0 25px rgba(0,150,255,0.6);
+    width:80px;
+    height:80px;
+    border-radius:50%;
+    border:6px solid #2c7be5;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:18px;
+    font-weight:bold;
+    margin:auto;
+    color:#2c7be5;
 }
 
 </style>
-""", unsafe_allow_html=True)
+</head>
 
-# ======================
-# TITLE
-# ======================
-st.markdown('<div class="title">GlobCare Performance Dashboard</div>', unsafe_allow_html=True)
-st.markdown(f'<div class="month">Month: {row["Month"]}</div>', unsafe_allow_html=True)
+<body>
 
-# ======================
-# KPI CIRCLES
-# ======================
-kpis = row.drop("Month")
+<div class="main-title">Patient Safety Indicators</div>
 
-html = '<div class="kpi-grid">'
+<div class="kpi-container">
 
-for name, value in kpis.items():
-    html += f"""
     <div class="kpi-box">
-        <div class="kpi-name">{name}</div>
-        <div class="circle">{value}</div>
+        <div class="kpi-name">Injury</div>
+        <div class="circle">0.01</div>
     </div>
-    """
 
-html += "</div>"
+    <div class="kpi-box">
+        <div class="kpi-name">Pressure</div>
+        <div class="circle">9.54</div>
+    </div>
 
-st.markdown(html, unsafe_allow_html=True)
+    <div class="kpi-box">
+        <div class="kpi-name">CLABSI</div>
+        <div class="circle">1.8</div>
+    </div>
 
-# ======================
-# BAR CHART
-# ======================
-chart_df = pd.DataFrame({
-"KPI": kpis.index,
-"Value": kpis.values
-})
+    <div class="kpi-box">
+        <div class="kpi-name">VAE</div>
+        <div class="circle">1.1</div>
+    </div>
 
-fig = px.bar(
-chart_df,
-x="KPI",
-y="Value",
-text="Value"
-)
+    <div class="kpi-box">
+        <div class="kpi-name">CAUTI</div>
+        <div class="circle">1.13</div>
+    </div>
 
-fig.update_layout(
-plot_bgcolor="#020617",
-paper_bgcolor="#020617",
-font_color="white"
-)
+</div>
 
-st.plotly_chart(fig, use_container_width=True)
+</body>
+</html>
