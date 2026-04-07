@@ -11,20 +11,30 @@ df = pd.read_excel("data.xlsx")
 
 st.success("File loaded successfully ✅")
 
+# ===== Convert numbers safely =====
+for col in df.columns:
+    df[col] = pd.to_numeric(df[col], errors="ignore")
+
 # ===== KPIs =====
 st.subheader("Key Metrics")
 
 numeric_cols = df.select_dtypes(include="number")
 
-cols = st.columns(len(numeric_cols.columns))
+if len(numeric_cols.columns) > 0:
 
-for i, col in enumerate(numeric_cols.columns):
-    cols[i].metric(col, int(numeric_cols[col].sum()))
+    cols = st.columns(len(numeric_cols.columns))
+
+    for i, col in enumerate(numeric_cols.columns):
+        cols[i].metric(col, int(numeric_cols[col].sum()))
+
+else:
+    st.warning("⚠️ No numeric columns detected")
 
 # ===== Charts =====
 st.subheader("Data Visualization")
 
-if len(numeric_cols.columns) >= 1:
+if len(numeric_cols.columns) > 0:
+
     chart_col = numeric_cols.columns[0]
 
     fig = px.bar(
