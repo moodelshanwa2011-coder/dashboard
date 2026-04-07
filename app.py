@@ -1,11 +1,12 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 import time
 
-# 1. إعدادات الصفحة (ثيم داكن واحترافي)
-st.set_page_config(page_title="ICU AI Performance Dashboard", layout="wide")
+# 1. إعدادات الصفحة
+st.set_page_config(page_title="ICU AI Monitor", layout="wide")
 
-# 2. قاعدة البيانات (مستخرجة من صورتك بدقة)
+# 2. البيانات
 kpi_labels = ["FALLS", "HAPI", "CLABSI", "VAE", "TURNOVER"]
 data_history = [
     [0.00, 26.67, 1.10, 1.05, 1.40],
@@ -16,98 +17,70 @@ data_history = [
 ]
 quarters = ["4Q 2023", "1Q 2024", "2Q 2024", "3Q 2024", "4Q 2024"]
 
-# --- تنسيق الواجهة (CSS) لمظهر الذكاء الاصطناعي ---
+# --- CSS لتنسيق الـ AI ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
-    
-    /* خلفية الصفحة */
     .stApp { background-color: #0B1015; color: white; }
-    
-    /* العنوان الكبير في المنتصف */
-    .main-title { 
-        text-align: center; 
-        font-family: 'Orbitron', sans-serif; 
-        color: #00f2ff; 
-        font-size: 38px; 
-        font-weight: bold;
-        margin-top: -20px;
-        text-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+    .ai-card { 
+        background: #161B22; border: 1px solid #00f2ff; border-radius: 12px; 
+        padding: 15px; text-align: center; 
     }
-    
-    /* كروت الـ KPIs (الدوائر المطورة) */
-    .kpi-card { 
-        background: rgba(0, 242, 255, 0.05); 
-        border: 1px solid rgba(0, 242, 255, 0.3); 
-        border-radius: 15px; 
-        padding: 20px; 
-        text-align: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    }
-    
-    .kpi-value { 
-        font-family: 'Orbitron', sans-serif; 
-        font-size: 28px; 
-        color: #fff; 
-        margin: 10px 0;
-        text-shadow: 0 0 10px #00f2ff;
-    }
-    
-    .kpi-label { 
-        font-size: 12px; 
-        color: #8B949E; 
-        text-transform: uppercase; 
-        letter-spacing: 2px;
-    }
+    .kpi-val { font-family: 'Orbitron'; font-size: 24px; color: #00f2ff; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- الهيكل الرئيسي ---
+st.markdown("<h1 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>ICU COMMAND CENTER</h1>", unsafe_allow_html=True)
 
-# 1. العنوان الرئيسي
-st.markdown('<div class="main-title">ICU PERFORMANCE COMMAND CENTER</div>', unsafe_allow_html=True)
-
-# إدارة العداد (Session State) لتحديث البيانات تلقائياً
+# إدارة العداد
 if 'step' not in st.session_state:
     st.session_state.step = 0
 
-# جلب بيانات الدورة الحالية
 idx = st.session_state.step % len(data_history)
-current_vals = data_history[idx]
-current_q = quarters[idx]
+vals = data_history[idx]
+q_label = quarters[idx]
 
-# عرض الفترة الزمنية في المنتصف
-st.markdown(f"<p style='text-align: center; color: #8B949E; font-family: Orbitron; margin-bottom: 30px;'>SYSTEM STATUS: ACTIVE | PERIOD: <span style='color: #00f2ff;'>{current_q}</span></p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align:center; color:#8B949E;'>PERIOD: {q_label}</p>", unsafe_allow_html=True)
 
-# 2. عرض كروت الـ KPIs (التي طلبتها كدوائر متقدمة)
+# 3. عرض الكروت (الدوائر المطورة)
 cols = st.columns(5)
 for i in range(5):
-    with cols[i]:
-        st.markdown(f"""
-            <div class="kpi-card">
-                <div class="kpi-label">{kpi_labels[i]}</div>
-                <div class="kpi-value">{current_vals[i]}</div>
-            </div>
-        """, unsafe_allow_html=True)
+    cols[i].markdown(f"""
+        <div class="ai-card">
+            <div style="font-size:10px; color:#8B949E;">{kpi_labels[i]}</div>
+            <div class="kpi-val">{vals[i]}</div>
+        </div>
+    """, unsafe_allow_html=True)
 
 st.write("---")
 
-# 3. عرض البار تشارت (تلقائي، سمباتيك، وبدون أخطاء)
-# استخدام أعمدة جانبية (Spacers) لجعل البار في المنتصف بمساحة أنيقة
-left_space, center_plot, right_space = st.columns([0.7, 2, 0.7])
-
-with center_plot:
-    # تحويل البيانات لجدول ليفهمه المتصفح
-    df_plot = pd.DataFrame({
-        'Metric': kpi_labels,
-        'Performance': current_vals
-    }).set_index('Metric')
+# 4. البار تشارت (Matplotlib) - حل مشكلة الـ Error نهائياً
+left, center, right = st.columns([0.8, 2, 0.8])
+with center:
+    fig, ax = plt.subplots(figsize=(6, 3))
+    # لون الخلفية ليطابق الـ Dark Mode
+    fig.patch.set_facecolor('#0B1015')
+    ax.set_facecolor('#0B1015')
     
-    # استخدام الرسم البياني الأصلي لـ Streamlit لضمان الاستقرار التام وظهور المحاور
-    st.bar_chart(df_plot, color="#00f2ff", use_container_width=True)
+    bars = ax.bar(kpi_labels, vals, color='#00f2ff', edgecolor='white', linewidth=0.5)
+    
+    # إظهار المحاور (Axis)
+    ax.set_ylabel('Performance Value', color='#8B949E', fontsize=8)
+    ax.tick_params(axis='x', colors='#8B949E', labelsize=7)
+    ax.tick_params(axis='y', colors='#8B949E', labelsize=7)
+    ax.spines['bottom'].set_color('#8B949E')
+    ax.spines['left'].set_color('#8B949E')
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    
+    # إضافة الأرقام فوق الأعمدة
+    for bar in bars:
+        height = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width()/2., height + 0.5, f'{height}', ha='center', va='bottom', color='#00f2ff', fontsize=7)
 
-# --- منطق التحديث التلقائي ---
-# الانتظار 10 ثوانٍ ثم إعادة تحميل الصفحة بالبيانات الجديدة
+    st.pyplot(fig)
+
+# 5. التحديث التلقائي المستقر
 time.sleep(10)
 st.session_state.step += 1
 st.rerun()
