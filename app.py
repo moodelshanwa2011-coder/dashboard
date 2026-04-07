@@ -1,38 +1,30 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 
-st.set_page_config(layout="wide")
+st.title("📊 Excel Dashboard")
 
-st.title("📊 GlobCare KPI Dashboard")
+# رفع ملف الاكسل
+uploaded_file = st.file_uploader("ارفع ملف Excel", type=["xlsx"])
 
-# تحميل البيانات
-df = pd.read_excel("data.xlsx")
+if uploaded_file is not None:
 
-st.success("Data Loaded ✅")
+    # قراءة الملف
+    df = pd.read_excel(uploaded_file)
 
-# عرض عدد الصفوف والأعمدة
-col1, col2 = st.columns(2)
-col1.metric("Rows", df.shape[0])
-col2.metric("Columns", df.shape[1])
+    st.subheader("📄 البيانات")
+    st.dataframe(df)
 
-# اختيار عمود للرسم
-st.subheader("Chart")
+    # اختيار الأعمدة الرقمية فقط
+    numeric_cols = df.select_dtypes(include="number")
 
-numeric_cols = df.select_dtypes(include="number")
+    if not numeric_cols.empty:
 
-if len(numeric_cols.columns) > 0:
-    selected_col = st.selectbox(
-        "Choose column",
-        numeric_cols.columns
-    )
+        st.subheader("📈 تحليل البيانات")
 
-    fig = px.line(df, y=selected_col)
-    st.plotly_chart(fig, use_container_width=True)
+        # رسم charts لكل عمود رقمي
+        for col in numeric_cols.columns:
+            st.write(f"Chart for {col}")
+            st.bar_chart(df[col])
 
-else:
-    st.warning("No numeric data found")
-
-# عرض البيانات
-st.subheader("Data Table")
-st.dataframe(df)
+    else:
+        st.warning("لا يوجد أعمدة رقمية للرسم")
