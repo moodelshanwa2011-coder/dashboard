@@ -1,12 +1,11 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
 import time
 
-# 1. إعدادات الصفحة (ثيم داكن)
-st.set_page_config(page_title="ICU AI Dashboard", layout="wide")
+# 1. إعدادات الصفحة (ثيم داكن واحترافي)
+st.set_page_config(page_title="ICU AI Performance Dashboard", layout="wide")
 
-# 2. البيانات المستخرجة من جدول المستشفى
+# 2. قاعدة البيانات (مستخرجة من صورتك بدقة)
 kpi_labels = ["FALLS", "HAPI", "CLABSI", "VAE", "TURNOVER"]
 data_history = [
     [0.00, 26.67, 1.10, 1.05, 1.40],
@@ -17,88 +16,98 @@ data_history = [
 ]
 quarters = ["4Q 2023", "1Q 2024", "2Q 2024", "3Q 2024", "4Q 2024"]
 
-# --- CSS لتنسيق واجهة الـ AI ---
+# --- تنسيق الواجهة (CSS) لمظهر الذكاء الاصطناعي ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
-    .stApp { background-color: #0B1015; }
-    .ai-title { text-align: center; font-size: 35px; font-family: 'Orbitron'; color: #00f2ff; margin-bottom: 10px; }
-    .ai-card { 
+    
+    /* خلفية الصفحة */
+    .stApp { background-color: #0B1015; color: white; }
+    
+    /* العنوان الكبير في المنتصف */
+    .main-title { 
+        text-align: center; 
+        font-family: 'Orbitron', sans-serif; 
+        color: #00f2ff; 
+        font-size: 38px; 
+        font-weight: bold;
+        margin-top: -20px;
+        text-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+    }
+    
+    /* كروت الـ KPIs (الدوائر المطورة) */
+    .kpi-card { 
         background: rgba(0, 242, 255, 0.05); 
         border: 1px solid rgba(0, 242, 255, 0.3); 
-        border-radius: 12px; padding: 15px; text-align: center;
+        border-radius: 15px; 
+        padding: 20px; 
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
-    .ai-circle { font-size: 24px; font-weight: bold; color: #fff; font-family: 'Orbitron'; margin: 5px 0; }
-    .kpi-title { font-size: 11px; color: #8892b0; letter-spacing: 1px; font-weight: bold; }
+    
+    .kpi-value { 
+        font-family: 'Orbitron', sans-serif; 
+        font-size: 28px; 
+        color: #fff; 
+        margin: 10px 0;
+        text-shadow: 0 0 10px #00f2ff;
+    }
+    
+    .kpi-label { 
+        font-size: 12px; 
+        color: #8B949E; 
+        text-transform: uppercase; 
+        letter-spacing: 2px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# العنوان الرئيسي
-st.markdown('<p class="ai-title">ICU AI COMMAND CENTER</p>', unsafe_allow_html=True)
+# --- الهيكل الرئيسي ---
 
-# إدارة حالة العداد (Step Counter) لمنع تداخل الرسوم
-if "step" not in st.session_state:
+# 1. العنوان الرئيسي
+st.markdown('<div class="main-title">ICU PERFORMANCE COMMAND CENTER</div>', unsafe_allow_html=True)
+
+# إدارة العداد (Session State) لتحديث البيانات تلقائياً
+if 'step' not in st.session_state:
     st.session_state.step = 0
 
-# تحديد البيانات الحالية بناءً على العداد
-current_idx = st.session_state.step % len(data_history)
-current_vals = data_history[current_idx]
-current_q = quarters[current_idx]
+# جلب بيانات الدورة الحالية
+idx = st.session_state.step % len(data_history)
+current_vals = data_history[idx]
+current_q = quarters[idx]
 
-# --- بناء المحتوى داخل حاوية نظيفة ---
-# 1. عرض الفترة الزمنية
-st.markdown(f"<p style='text-align: center; color: #8892b0; font-family: Orbitron;'>PERIOD: <span style='color: #00f2ff;'>{current_q}</span></p>", unsafe_allow_html=True)
+# عرض الفترة الزمنية في المنتصف
+st.markdown(f"<p style='text-align: center; color: #8B949E; font-family: Orbitron; margin-bottom: 30px;'>SYSTEM STATUS: ACTIVE | PERIOD: <span style='color: #00f2ff;'>{current_q}</span></p>", unsafe_allow_html=True)
 
-# 2. عرض الدوائر (KPIs)
+# 2. عرض كروت الـ KPIs (التي طلبتها كدوائر متقدمة)
 cols = st.columns(5)
-for i, col in enumerate(cols):
-    col.markdown(f"""
-        <div class="ai-card">
-            <div class="kpi-title">{kpi_labels[i]}</div>
-            <div class="ai-circle">{current_vals[i]}</div>
-        </div>
-    """, unsafe_allow_html=True)
+for i in range(5):
+    with cols[i]:
+        st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-label">{kpi_labels[i]}</div>
+                <div class="kpi-value">{current_vals[i]}</div>
+            </div>
+        """, unsafe_allow_html=True)
 
 st.write("---")
 
-# 3. عرض البار تشارت (مساحة أصغر + إظهار المحاور)
-# استخدام أعمدة جانبية لتصغير عرض البار (0.7 مساحة فارغة يمين ويسار)
-_, center_col, _ = st.columns([0.7, 2, 0.7])
+# 3. عرض البار تشارت (تلقائي، سمباتيك، وبدون أخطاء)
+# استخدام أعمدة جانبية (Spacers) لجعل البار في المنتصف بمساحة أنيقة
+left_space, center_plot, right_space = st.columns([0.7, 2, 0.7])
 
-with center_col:
-    fig = go.Figure(go.Bar(
-        x=kpi_labels,
-        y=current_vals,
-        marker=dict(color='#00f2ff', line=dict(color='#ffffff', width=0.5)),
-        text=current_vals,
-        textposition='outside',
-        textfont=dict(color='#00f2ff', family='Orbitron')
-    ))
-
-    fig.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        height=380,
-        margin=dict(l=50, r=20, t=50, b=50),
-        xaxis=dict(
-            tickfont=dict(color='#8892b0', family='Orbitron'),
-            showgrid=False,
-            linecolor='#8892b0'
-        ),
-        yaxis=dict(
-            title="Performance Value",
-            titlefont=dict(color='#8892b0', size=12),
-            tickfont=dict(color='#8892b0'),
-            gridcolor='rgba(255,255,255,0.05)',
-            range=[0, 35]
-        ),
-        showlegend=False
-    )
+with center_plot:
+    # تحويل البيانات لجدول ليفهمه المتصفح
+    df_plot = pd.DataFrame({
+        'Metric': kpi_labels,
+        'Performance': current_vals
+    }).set_index('Metric')
     
-    # عرض الرسم البياني (بدون Key لمنع الـ ValueError مع rerun)
-    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+    # استخدام الرسم البياني الأصلي لـ Streamlit لضمان الاستقرار التام وظهور المحاور
+    st.bar_chart(df_plot, color="#00f2ff", use_container_width=True)
 
 # --- منطق التحديث التلقائي ---
+# الانتظار 10 ثوانٍ ثم إعادة تحميل الصفحة بالبيانات الجديدة
 time.sleep(10)
 st.session_state.step += 1
 st.rerun()
