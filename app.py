@@ -1,11 +1,25 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
+from streamlit_autorefresh import st_autorefresh
 
-st.set_page_config(layout="wide")
+# =============================
+# PAGE SETTINGS
+# =============================
+st.set_page_config(page_title="Interactive Excel Dashboard", layout="wide")
+
+# Auto refresh every 30 seconds
+st_autorefresh(interval=30 * 1000, key="refresh")
 
 st.title("📊 Interactive Excel Dashboard")
 
-uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
+# =============================
+# FILE UPLOAD
+# =============================
+uploaded_file = st.file_uploader(
+    "Upload Excel File",
+    type=["xlsx"]
+)
 
 if uploaded_file is not None:
 
@@ -13,30 +27,80 @@ if uploaded_file is not None:
 
     st.success("File Uploaded Successfully ✅")
 
-    # فلتر الشهر
+    # =============================
+    # CLEAN DATA
+    # =============================
+    df.columns = df.columns.str.strip()
+
+    # =============================
+    # MONTH FILTER
+    # =============================
     if "Month" in df.columns:
-        month = st.selectbox("Select Month", df["Month"].unique())
-        df = df[df["Month"] == month]
+        months = df["Month"].dropna().unique()
 
-    # أرقام سريعة
-    col1, col2 = st.columns(2)
+        selected_month = st.selectbox(
+            "Select Month",
+            months
+        )
 
-    col1.metric("عدد الصفوف", len(df))
+        df = df[df["Month"] == selected_month]
 
-    # تحويل Actual لأرقام بشكل آمن
-if "Actual" in df.columns:
-    df["Actual"] = pd.to_numeric(df["Actual"], errors="coerce")
+    # =============================
+    # CONVERT ACTUAL TO NUMERIC
+    # =============================
+    if "Actual" in df.columns:
+        df["Actual"] = pd.to_numeric(df["Actual"], errors="coerce")
 
-    avg_actual = df["Actual"].mean()
+    # =============================
+    # KPI CARDS
+    # =============================
+    st.subheader("Key Metrics")
 
-    if pd.notnull(avg_actual):
-        col2.metric("متوسط Actual", round(avg_actual, 2))
+    col1, col2, col3 = st.columns(3)
 
-    # رسم بياني
+    with col1:
+        st.metric("عدد الصفوف", len(df))
+
+    if "Actual" in df.columns:
+        with col2:
+            st.metric(
+                "Average Actual",
+                round(df["Actual"].mean(), 2)
+            )
+
+        with col3:
+            st.metric(
+                "Max Actual",
+                round(df["Actual"].max(), 2)
+            )
+
+    # =============================
+    # CHART
+    # =============================
+    st.subheader("Actual Performance")
+
     if "KPI" in df.columns and "Actual" in df.columns:
-        st.subheader("Actual Performance")
-        st.bar_chart(df.set_index("KPI")["Actual"])
 
-    # الجدول
+        chart_data = (
+            df.groupby("KPI", as_index=False)["Actual"]
+            .mean()
+        )
+
+        fig = px.bar(
+            chart_data,
+            x="KPI",
+            y="Actual",
+            title="Average Actual per KPI"
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+    # =============================
+    # DATA TABLE
+    # =============================
     st.subheader("Data")
-    st.dataframe(df)
+
+    st.dataframe(df, use_container_width=True)
+
+else:
+    st.info("Please upload an Excel file to start.")
