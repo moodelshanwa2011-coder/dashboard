@@ -43,9 +43,14 @@ if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
     # ---------- FIX NUMBERS ----------
-    for col in df.columns:
-        df[col] = df[col].astype(str).str.replace('%', '')
-        df[col] = pd.to_numeric(df[col], errors='ignore')
+   # ---------- FIX NUMBERS SAFELY ----------
+for col in df.columns:
+    df[col] = df[col].astype(str).str.replace('%', '', regex=False)
+
+    try:
+        df[col] = pd.to_numeric(df[col])
+    except:
+        pass
 
     st.success("File Uploaded Successfully ✅")
 
