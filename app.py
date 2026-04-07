@@ -7,32 +7,50 @@ st.set_page_config(layout="wide")
 
 st.title("GlobCare Performance Dashboard")
 
-# تحديث الصفحة كل 10 ثواني
+# تحديث تلقائي كل 10 ثواني
 count = st_autorefresh(interval=10000, key="refresh")
 
 # قراءة الاكسل
 df = pd.read_excel("GlobCare -KPI_Dashboard_v5.xlsx")
 
-# تحديد الشهر الحالي تلقائياً
-row_index = count % len(df)
+# تنظيف البيانات
+df = df.dropna(how="all")
 
-month = df.iloc[row_index, 0]
-data = df.iloc[row_index, 1:]
+# أول عمود = Month
+months = df.iloc[:, 0]
 
-st.subheader(f"Month: {month}")
+# باقي الأعمدة KPI
+kpis = df.iloc[:, 1:]
 
-# ===== KPI BOXES =====
-cols = st.columns(len(data))
+# اختيار شهر تلقائي
+index = count % len(df)
 
-for col, (name, value) in zip(cols, data.items()):
+current_month = months.iloc[index]
+current_values = kpis.iloc[index]
+
+st.subheader(f"Month: {current_month}")
+
+# ===== KPI CIRCLES (بطاقات) =====
+cols = st.columns(len(current_values))
+
+values_list = []
+
+for col, (name, value) in zip(cols, current_values.items()):
     col.metric(label=name, value=value)
+    values_list.append(value)
 
-# ===== CHART =====
+# ===== BAR CHART =====
 chart_df = pd.DataFrame({
-    "KPI": data.index,
-    "Value": data.values
+    "KPI": current_values.index,
+    "Value": pd.to_numeric(values_list, errors="coerce")
 })
 
 fig = px.bar(chart_df, x="KPI", y="Value", text="Value")
+
+fig.update_layout(
+    plot_bgcolor="#0e1117",
+    paper_bgcolor="#0e1117",
+    font_color="white"
+)
 
 st.plotly_chart(fig, use_container_width=True)
