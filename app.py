@@ -2,13 +2,13 @@ import streamlit as st
 import pandas as pd
 import time
 
-# ---------- PAGE ----------
+# ---------- PAGE CONFIG ----------
 st.set_page_config(
     page_title="GlobCare Dashboard",
     layout="wide"
 )
 
-# ---------- DARK PROFESSIONAL STYLE ----------
+# ---------- DARK STYLE ----------
 st.markdown("""
 <style>
 
@@ -21,13 +21,13 @@ body {
     font-size:42px;
     font-weight:700;
     color:white;
-    margin-bottom:5px;
+    margin-top:10px;
 }
 
 .month{
     text-align:center;
     font-size:22px;
-    color:#AAAAAA;
+    color:#9CA3AF;
     margin-bottom:30px;
 }
 
@@ -43,8 +43,8 @@ body {
     border-radius:50%;
     background:linear-gradient(145deg,#1f2937,#111827);
     box-shadow:
-        0 0 25px rgba(0,150,255,0.4),
-        inset 0 0 20px rgba(255,255,255,0.05);
+        0 0 30px rgba(0,150,255,0.35),
+        inset 0 0 15px rgba(255,255,255,0.05);
     color:white;
     display:flex;
     flex-direction:column;
@@ -55,7 +55,7 @@ body {
 }
 
 .circle:hover{
-    transform:scale(1.05);
+    transform:scale(1.06);
 }
 
 .kpi-name{
@@ -66,9 +66,9 @@ body {
 }
 
 .kpi-value{
-    font-size:34px;
+    font-size:36px;
     font-weight:bold;
-    margin-top:6px;
+    margin-top:8px;
 }
 
 </style>
@@ -77,12 +77,12 @@ body {
 # ---------- LOAD EXCEL ----------
 df = pd.read_excel("GlobCare -KPI_Dashboard_v5.xlsx")
 
-months = df.iloc[:,0]      # أول عمود = الشهر
-metrics = df.columns[1:]   # باقي الأعمدة = أسماء KPI الحقيقية
+months = df.iloc[:, 0]      # أول عمود = الشهر
+metrics = df.columns[1:]    # باقي الأعمدة = أسماء KPI
 
 placeholder = st.empty()
 
-# ---------- LIVE LOOP ----------
+# ---------- LIVE AUTO REFRESH ----------
 while True:
     for i in range(len(df)):
 
