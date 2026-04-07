@@ -23,8 +23,14 @@ if uploaded_file is not None:
 
     col1.metric("عدد الصفوف", len(df))
 
-    if "Actual" in df.columns:
-        col2.metric("متوسط Actual", round(df["Actual"].mean(),2))
+    # تحويل Actual لأرقام بشكل آمن
+if "Actual" in df.columns:
+    df["Actual"] = pd.to_numeric(df["Actual"], errors="coerce")
+
+    avg_actual = df["Actual"].mean()
+
+    if pd.notnull(avg_actual):
+        col2.metric("متوسط Actual", round(avg_actual, 2))
 
     # رسم بياني
     if "KPI" in df.columns and "Actual" in df.columns:
