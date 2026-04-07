@@ -4,7 +4,7 @@ import pandas as pd
 st.title("GlobCare KPI Dashboard")
 
 try:
-    df = pd.read_excel("GlobCare -KPI_Dashboard_v5.xlsx")
+    df = pd.read_excel("data.xlsx")
     st.success("File loaded successfully ✅")
     st.dataframe(df)
 
