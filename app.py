@@ -2,7 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(
-    page_title="ICU Executive Performance",
+    page_title="ICU Riyadh | Executive Dashboard",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -15,117 +15,157 @@ dashboard_html = """
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg: #020617;
-            --card-bg: rgba(30, 41, 59, 0.45);
-            --neon-cyan: #06b6d4;
+            --bg: #050810;
+            --card-bg: rgba(15, 23, 42, 0.8);
+            --neon-cyan: #22d3ee;
             --neon-rose: #f43f5e;
-            --text-dim: #94a3b8;
-            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-dim: #64748b;
+            --border-glow: rgba(34, 211, 238, 0.3);
         }
+        
         body {
             font-family: 'Inter', -apple-system, sans-serif;
             background-color: var(--bg);
-            color: #f8fafc;
+            color: var(--text-main);
             margin: 0;
-            padding: 20px;
+            padding: 30px;
             overflow: hidden;
+            height: 100vh;
         }
+
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Header Professional Look */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             background: var(--card-bg);
             backdrop-filter: blur(20px);
-            padding: 15px 35px;
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            margin-bottom: 20px;
+            padding: 25px 50px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
+
+        .header h1 { margin: 0; font-size: 2rem; letter-spacing: 2px; font-weight: 900; }
         .q-badge {
             background: linear-gradient(135deg, #0891b2, #22d3ee);
             color: #020617;
-            padding: 8px 24px;
-            border-radius: 8px;
-            font-weight: 800;
-            font-size: 1.1rem;
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+            padding: 12px 40px;
+            border-radius: 15px;
+            font-weight: 900;
+            font-size: 1.5rem;
+            box-shadow: 0 0 25px var(--border-glow);
         }
+
+        /* KPI Grid with Professional Borders */
         .grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        .square-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            transition: 0.3s;
-        }
-        .square-card:hover { border-color: var(--neon-cyan); background: rgba(6, 182, 212, 0.05); }
-        .val { font-size: 2rem; font-weight: 900; margin-bottom: 5px; }
-        .safe { color: var(--neon-cyan); text-shadow: 0 0 15px rgba(6, 182, 212, 0.4); }
-        .alert { color: var(--neon-rose); text-shadow: 0 0 15px rgba(244, 63, 94, 0.4); }
-        .label { font-size: 0.85rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
-
-        /* منطقة الرسم البياني والدائرة الكبيرة */
-        .analytics-row {
-            display: grid;
-            grid-template-columns: 2fr 1.2fr; /* البار تشارت يسار والدائرة يمين */
             gap: 20px;
-            height: 300px;
+            margin-bottom: 30px;
         }
-        .glass-panel {
+
+        .kpi-card {
             background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 20px;
-            border: 1px solid var(--border);
-            position: relative;
+            border-radius: 24px;
+            padding: 30px;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
         }
-        .gauge-container {
+
+        .kpi-card:hover {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 20px var(--border-glow);
+            transform: translateY(-5px);
+        }
+
+        .val-display {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+
+        .safe-text { color: var(--neon-cyan); text-shadow: 0 0 15px rgba(34, 211, 238, 0.5); }
+        .alert-text { color: var(--neon-rose); text-shadow: 0 0 15px rgba(244, 63, 94, 0.5); }
+
+        .label-text { font-size: 1rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; }
+
+        /* Bottom Section: Chart + Compliance Gauge */
+        .bottom-row {
+            display: grid;
+            grid-template-columns: 1.8fr 1.2fr;
+            gap: 30px;
+            height: 400px;
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border-radius: 30px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Large Professional Compliance Circle */
+        .compliance-circle {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            border: 12px solid #1e293b;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            text-align: center;
+            position: relative;
+            transition: all 1s ease;
         }
-        #safetyScore {
-            font-size: 3.5rem;
-            font-weight: 900;
-            color: var(--neon-cyan);
-            margin-top: -10px;
-        }
-        .gauge-label { font-size: 1rem; color: var(--text-dim); font-weight: bold; margin-top: 10px; }
+
+        .score-num { font-size: 4.5rem; font-weight: 900; line-height: 1; }
+        .score-label { font-size: 0.9rem; font-weight: 800; color: var(--text-dim); margin-top: 5px; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div>
-            <h1 style="margin:0; font-size:1.4rem; letter-spacing:1px;">ICU <span style="color:var(--neon-cyan)">EXECUTIVE</span> ANALYTICS</h1>
-            <p style="margin:4px 0 0 0; color:var(--text-dim); font-size:0.8rem;">Saudi German Hospital | Riyadh Operations</p>
+    <div class="main-container">
+        <div class="header">
+            <div>
+                <h1>ICU <span style="color:var(--neon-cyan)">EXECUTIVE</span> PERFORMANCE</h1>
+                <p style="margin:5px 0 0 0; color:var(--text-dim); font-weight:600;">SAUDI GERMAN HEALTH | RIYADH BRANCH</p>
+            </div>
+            <div class="q-badge" id="qLabel">4Q 2023</div>
         </div>
-        <div class="q-badge" id="qLabel">4Q 2023</div>
-    </div>
 
-    <div class="grid" id="kpiGrid"></div>
+        <div class="grid" id="kpiGrid"></div>
 
-    <div class="analytics-row">
-        <div class="glass-panel">
-            <canvas id="barChart"></canvas>
-        </div>
-        <div class="glass-panel gauge-container">
-            <div id="safetyScore">0%</div>
-            <div class="gauge-label">OVERALL SAFETY COMPLIANCE</div>
-            <div style="font-size: 0.7rem; color: #475569; margin-top: 15px;">Calculated vs. NHCI Benchmarks</div>
+        <div class="bottom-row">
+            <div class="panel">
+                <canvas id="mainChart"></canvas>
+            </div>
+            <div class="panel">
+                <div class="compliance-circle" id="circleBorder">
+                    <div class="score-num" id="scoreValue">0%</div>
+                </div>
+                <div class="score-label" style="margin-top:20px; font-size:1.2rem; color:var(--text-main)">SAFETY COMPLIANCE</div>
+                <p style="color:var(--text-dim); font-size:0.8rem; margin-top:10px;">Calculated against Global NHCI Benchmarks</p>
+            </div>
         </div>
     </div>
 
     <script>
         const timeline = [
-            { q: "4Q 2023", v: [0, 7.3, 1.38, 1.57, 0, 5.21, 67.2, 13.0], b: [0.04, 26.6, 1.3, 1.0, 0.4, 1.6, 83.5, 8.0] },
+            { q: "4Q 2023", v: [0, 7.30, 1.38, 1.57, 0, 5.21, 67.2, 13.0], b: [0.04, 26.6, 1.3, 1.0, 0.4, 1.6, 83.5, 8.0] },
             { q: "1Q 2024", v: [0.24, 6.45, 1.28, 2.17, 0.70, 4.84, 83.0, 20.1], b: [0.09, 7.7, 2.6, 2.4, 0.9, 4.4, 70.3, 19.1] },
             { q: "2Q 2024", v: [0.06, 6.54, 1.56, 2.04, 0.67, 3.74, 82.7, 18.2], b: [0.24, 14.2, 2.4, 1.0, 0.5, 6.2, 71.2, 12.5] },
             { q: "3Q 2024", v: [0.28, 4.60, 1.20, 1.89, 0.40, 4.51, 83.4, 18.3], b: [0.36, 6.9, 2.6, 1.0, 1.0, 4.6, 68.2, 19.2] },
@@ -135,42 +175,46 @@ dashboard_html = """
         const labels = ["Falls", "HAPI", "CLABSI", "VAE", "CAUTI", "Turnover", "BSN Edu", "RN Hours"];
         let idx = 0; let chart;
 
-        function update() {
+        function refresh() {
             const data = timeline[idx];
             document.getElementById('qLabel').innerText = data.q;
             const grid = document.getElementById('kpiGrid');
             grid.innerHTML = '';
-
-            let passCount = 0;
+            let pass = 0;
 
             data.v.forEach((v, i) => {
                 const isBad = (i < 6) ? (v > data.b[i]) : (v < data.b[i]);
-                const cls = isBad ? 'alert' : 'safe';
-                if (!isBad) passCount++;
-                
+                const cls = isBad ? 'alert-text' : 'safe-text';
+                if(!isBad) pass++;
                 grid.innerHTML += `
-                    <div class="square-card">
-                        <div class="val ${cls}">${v}</div>
-                        <div class="label">${labels[i]}</div>
+                    <div class="kpi-card">
+                        <div class="val-display ${cls}">${v}</div>
+                        <div class="label-text">${labels[i]}</div>
                     </div>`;
             });
 
-            // تحديث نسبة الأمان (Safety Score)
-            const score = Math.round((passCount / 8) * 100);
-            document.getElementById('safetyScore').innerText = score + "%";
-            document.getElementById('safetyScore').style.color = score >= 75 ? "#06b6d4" : "#f43f5e";
+            // Update Circle Compliance
+            const score = Math.round((pass/8)*100);
+            const scoreEl = document.getElementById('scoreValue');
+            const circle = document.getElementById('circleBorder');
+            scoreEl.innerText = score + "%";
+            
+            const finalColor = score >= 75 ? "#22d3ee" : "#f43f5e";
+            scoreEl.style.color = finalColor;
+            circle.style.borderColor = finalColor;
+            circle.style.boxShadow = `0 0 30px ${finalColor}44`;
 
             if(!chart) {
-                const ctx = document.getElementById('barChart').getContext('2d');
+                const ctx = document.getElementById('mainChart').getContext('2d');
                 chart = new Chart(ctx, {
                     type: 'bar',
-                    data: { labels: labels, datasets: [{ data: data.v, backgroundColor: '#06b6d4', borderRadius: 4, barThickness: 20 }] },
+                    data: { labels: labels, datasets: [{ data: data.v, backgroundColor: '#22d3ee', borderRadius: 8, barThickness: 25 }] },
                     options: { 
                         maintainAspectRatio: false, 
                         plugins: { legend: { display: false } },
                         scales: { 
-                            y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#475569', font: { size: 10 } } },
-                            x: { ticks: { color: '#94a3b8', font: { size: 10, weight: 'bold' } } }
+                            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                            x: { ticks: { color: '#f8fafc', font: { weight: 'bold' } } }
                         }
                     }
                 });
@@ -180,10 +224,10 @@ dashboard_html = """
             }
             idx = (idx + 1) % timeline.length;
         }
-        update(); setInterval(update, 8000);
+        refresh(); setInterval(refresh, 8000);
     </script>
 </body>
 </html>
 """
 
-components.html(dashboard_html, height=800, scrolling=False)
+components.html(dashboard_html, height=1000, scrolling=False)
