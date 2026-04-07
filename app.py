@@ -1,72 +1,76 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
+import plotly.graph_objects as go
 from streamlit_autorefresh import st_autorefresh
 
 # ======================
-# PAGE SETTINGS
+# PAGE
 # ======================
 st.set_page_config(layout="wide")
 
-# ======================
-# AUTO REFRESH (10 sec)
-# ======================
+# AUTO REFRESH 10 sec
 count = st_autorefresh(interval=10000, key="refresh")
 
 # ======================
-# PROFESSIONAL STYLE
+# STYLE
 # ======================
 st.markdown("""
 <style>
 
-body {
-    background-color:#0e1117;
+.stApp {
+    background: linear-gradient(180deg,#0b1320,#06090f);
 }
 
-.main-title{
+/* TITLE */
+.title {
     text-align:center;
-    font-size:42px;
+    font-size:44px;
     font-weight:700;
     color:white;
-    margin-bottom:5px;
 }
 
-.sub-title{
+.subtitle {
     text-align:center;
     font-size:20px;
-    color:#9ecbff;
+    color:#8ecbff;
     margin-bottom:40px;
 }
 
-.circle-container{
+/* KPI GRID */
+.kpi-grid{
     display:flex;
-    justify-content:space-between;
+    justify-content:center;
+    gap:60px;
     flex-wrap:wrap;
 }
 
-.circle-box{
+/* KPI NAME */
+.kpi-name{
     text-align:center;
+    color:#9fd3ff;
+    font-size:18px;
+    margin-bottom:12px;
 }
 
+/* CIRCLE */
 .circle{
-    width:150px;
-    height:150px;
+    width:170px;
+    height:170px;
     border-radius:50%;
-    background: radial-gradient(circle,#1f2a38,#0e1117);
+    background: radial-gradient(circle at 30% 30%, #1c2b3f, #09101a);
     display:flex;
     align-items:center;
     justify-content:center;
-    color:white;
-    font-size:28px;
+    font-size:34px;
     font-weight:bold;
-    box-shadow:0 0 25px rgba(0,140,255,0.6);
-    margin:auto;
+    color:white;
+    box-shadow:
+        0 0 30px rgba(0,150,255,0.6),
+        inset 0 0 20px rgba(255,255,255,0.05);
 }
 
-.kpi-name{
-    color:#9ecbff;
-    font-size:16px;
-    margin-bottom:10px;
+.kpi-box{
+    text-align:center;
 }
 
 </style>
@@ -76,25 +80,24 @@ body {
 # DATA (من الصورة)
 # ======================
 data = [
-    {"Month":"1Q 2024","Patient Falls":0.24,"Injury Falls":0.26,"Pressure Injury":14.29,"CLABSI":2.47,"VAE":2.48,"CAUTI":0.98},
-    {"Month":"2Q 2024","Patient Falls":0.31,"Injury Falls":0.30,"Pressure Injury":6.90,"CLABSI":2.63,"VAE":0,"CAUTI":1.02},
-    {"Month":"3Q 2024","Patient Falls":0.00,"Injury Falls":0.01,"Pressure Injury":9.54,"CLABSI":1.80,"VAE":1.10,"CAUTI":1.13},
-    {"Month":"1Q 2025","Patient Falls":1.59,"Injury Falls":0.80,"Pressure Injury":4.17,"CLABSI":3.02,"VAE":6.69,"CAUTI":0.00},
+    {"Month":"1Q 2024","Falls":0.24,"Injury":0.26,"Pressure":14.29,"CLABSI":2.47,"VAE":2.48,"CAUTI":0.98},
+    {"Month":"2Q 2024","Falls":0.31,"Injury":0.30,"Pressure":6.9,"CLABSI":2.63,"VAE":0.0,"CAUTI":1.02},
+    {"Month":"3Q 2024","Falls":0.00,"Injury":0.01,"Pressure":9.54,"CLABSI":1.80,"VAE":1.10,"CAUTI":1.13},
+    {"Month":"1Q 2025","Falls":1.59,"Injury":0.80,"Pressure":4.17,"CLABSI":3.02,"VAE":6.69,"CAUTI":0.00},
 ]
 
 df = pd.DataFrame(data)
 
-# اختيار شهر تلقائي
-index = count % len(df)
-row = df.iloc[index]
+# CHANGE MONTH AUTO
+row = df.iloc[count % len(df)]
 
 # ======================
 # TITLES
 # ======================
 st.markdown(
     f"""
-    <div class="main-title">ICU Performance Dashboard - Riyadh</div>
-    <div class="sub-title">Month: {row['Month']}</div>
+    <div class="title">ICU Performance Dashboard - Riyadh</div>
+    <div class="subtitle">Month: {row['Month']}</div>
     """,
     unsafe_allow_html=True
 )
@@ -104,14 +107,14 @@ st.markdown(
 # ======================
 kpis = row.drop("Month")
 
-html = '<div class="circle-container">'
+html = '<div class="kpi-grid">'
 
 for name, value in kpis.items():
     html += f"""
-        <div class="circle-box">
-            <div class="kpi-name">{name}</div>
-            <div class="circle">{value}</div>
-        </div>
+    <div class="kpi-box">
+        <div class="kpi-name">{name}</div>
+        <div class="circle">{value}</div>
+    </div>
     """
 
 html += "</div>"
@@ -123,17 +126,20 @@ st.markdown("<br><br>", unsafe_allow_html=True)
 # ======================
 # BAR CHART
 # ======================
-chart_df = pd.DataFrame({
-    "KPI": kpis.index,
-    "Value": kpis.values
-})
-
-fig = px.bar(chart_df, x="KPI", y="Value", text="Value")
+fig = go.Figure(
+    go.Bar(
+        x=list(kpis.index),
+        y=list(kpis.values),
+        text=list(kpis.values),
+        textposition="outside"
+    )
+)
 
 fig.update_layout(
-    plot_bgcolor="#0e1117",
-    paper_bgcolor="#0e1117",
-    font_color="white"
+    plot_bgcolor="#06090f",
+    paper_bgcolor="#06090f",
+    font_color="white",
+    height=450
 )
 
 st.plotly_chart(fig, use_container_width=True)
