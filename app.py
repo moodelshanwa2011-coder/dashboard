@@ -1,14 +1,14 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-# 1. إعدادات الصفحة (يجب أن تكون أول أمر في بايثون)
+# إعدادات الصفحة الاحترافية
 st.set_page_config(
-    page_title="ICU Riyadh | Modern Dashboard",
+    page_title="ICU Riyadh | Modern Executive Dashboard",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# 2. تعريف كود الـ HTML داخل متغير نصي واحد مغلق بدقة
+# كود الواجهة المحدث (Modern Squares + Professional Colors)
 dashboard_html = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -17,80 +17,89 @@ dashboard_html = """
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg: #0a0e17;
-            --glass: rgba(30, 41, 59, 0.7);
-            --neon-blue: #38bdf8;
-            --neon-red: #fb7185;
-            --text: #f1f5f9;
+            --bg: #030712;
+            --card-bg: rgba(30, 41, 59, 0.5);
+            --accent: #38bdf8;
+            --danger: #f43f5e;
+            --border: rgba(255, 255, 255, 0.1);
+            --text-p: #94a3b8;
         }
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background-color: var(--bg);
-            color: var(--text);
+            color: #f8fafc;
             margin: 0;
-            padding: 20px;
-            overflow-x: hidden;
+            padding: 25px;
+            overflow: hidden;
         }
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
             padding: 20px 40px;
-            background: var(--glass);
-            backdrop-filter: blur(12px);
             border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
             margin-bottom: 25px;
         }
         .q-badge {
-            background: var(--neon-blue);
-            color: #0a0e17;
-            padding: 10px 30px;
-            border-radius: 12px;
-            font-weight: bold;
-            font-size: 1.4rem;
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+            background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+            color: #030712;
+            padding: 8px 25px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            box-shadow: 0 10px 20px rgba(56, 189, 248, 0.2);
         }
         .grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
+            gap: 15px;
             margin-bottom: 25px;
         }
-        .card {
-            background: var(--glass);
+        /* تصميم المربعات Modern Squares */
+        .square-card {
+            background: var(--card-bg);
             backdrop-filter: blur(10px);
-            border-radius: 25px;
+            border: 1px solid var(--border);
+            border-radius: 18px;
             padding: 25px;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: 0.3s;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .card:hover { transform: translateY(-5px); border-color: var(--neon-blue); }
-        .circle {
-            width: 100px; height: 100px; border-radius: 50%;
-            border: 5px solid rgba(255, 255, 255, 0.1);
-            margin: 0 auto 15px; display: flex;
-            align-items: center; justify-content: center;
-            font-size: 1.7rem; font-weight: 800;
+        .square-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            background: rgba(56, 189, 248, 0.05);
         }
-        .blue { border-color: var(--neon-blue); color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
-        .red { border-color: var(--neon-red); color: var(--neon-red); text-shadow: 0 0 10px var(--neon-red); }
-        .label { font-weight: bold; color: #94a3b8; }
+        .value-box {
+            font-size: 2.2rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+        .safe { color: var(--accent); text-shadow: 0 0 20px rgba(56, 189, 248, 0.3); }
+        .alert { color: var(--danger); text-shadow: 0 0 20px rgba(244, 63, 94, 0.3); }
+        
+        .label { font-size: 0.95rem; font-weight: 600; color: var(--text-p); }
+        .bm-ref { font-size: 0.75rem; color: #475569; margin-top: 8px; }
+
         .chart-box {
-            background: var(--glass);
-            border-radius: 25px;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
             padding: 25px;
-            height: 300px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            height: 320px;
+            border: 1px solid var(--border);
         }
     </style>
 </head>
 <body>
     <div class="header">
         <div>
-            <h1 style="margin:0; color:var(--neon-blue)">Executive ICU Dashboard</h1>
-            <p style="margin:5px 0 0 0; color:#64748b">SGH Riyadh - Performance Monitoring</p>
+            <h1 style="margin:0; font-size:1.6rem; letter-spacing:1px;">ICU PERFORMANCE <span style="color:var(--accent)">ANALYSIS</span></h1>
+            <p style="margin:5px 0 0 0; color:var(--text-p); font-size:0.85rem;">Saudi German Hospital | Riyadh</p>
         </div>
         <div class="q-badge" id="qLabel">4Q 2023</div>
     </div>
@@ -98,7 +107,7 @@ dashboard_html = """
     <div class="grid" id="kpiGrid"></div>
 
     <div class="chart-box">
-        <canvas id="barChart"></canvas>
+        <canvas id="mainChart"></canvas>
     </div>
 
     <script>
@@ -108,7 +117,7 @@ dashboard_html = """
             { q: "2Q 2024", v: [0.0, 6.5, 1.5, 2.0, 0.6, 3.7, 82, 18], b: [0.2, 14, 2.4, 1, 0.5, 6.2, 71, 12] },
             { q: "3Q 2024", v: [0.2, 4.6, 1.2, 1.8, 0.4, 4.5, 83, 18], b: [0.3, 6.9, 2.6, 1, 1, 4.6, 68, 19] }
         ];
-        const titles = ["سقوط", "HAPI", "Blood", "VAE", "CAUTI", "Turnover", "BSN", "Hours"];
+        const titles = ["سقوط المرضى", "إصابات الضغط", "عدوى الدم", "VAE تنفس", "CAUTI مسالك", "دوران العمل", "تعليم BSN", "ساعات RN"];
         let idx = 0; let chart;
 
         function update() {
@@ -119,19 +128,42 @@ dashboard_html = """
 
             data.v.forEach((v, i) => {
                 const isBad = (i < 6) ? (v > data.b[i]) : (v < data.b[i]);
-                const cls = isBad ? 'red' : 'blue';
-                grid.innerHTML += `<div class="card"><div class="circle ${cls}">${v}</div><div class="label">${titles[i]}</div></div>`;
+                const cls = isBad ? 'alert' : 'safe';
+                grid.innerHTML += `
+                    <div class="square-card">
+                        <div class="value-box ${cls}">${v}</div>
+                        <div class="label">${titles[i]}</div>
+                        <div class="bm-ref">Benchmark: ${data.b[i]}</div>
+                    </div>`;
             });
 
             if(!chart) {
-                const ctx = document.getElementById('barChart').getContext('2d');
+                const ctx = document.getElementById('mainChart').getContext('2d');
                 chart = new Chart(ctx, {
                     type: 'bar',
-                    data: { labels: titles, datasets: [{ data: data.v, backgroundColor: '#38bdf8', borderRadius: 10 }] },
-                    options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#1e293b' } } } }
+                    data: { 
+                        labels: titles, 
+                        datasets: [{ 
+                            data: data.v, 
+                            backgroundColor: '#38bdf8', 
+                            borderRadius: 6,
+                            barThickness: 25 // تقليل عرض البار ليكون أرفع وأجمل
+                        }] 
+                    },
+                    options: { 
+                        maintainAspectRatio: false, 
+                        plugins: { legend: { display: false } },
+                        scales: { 
+                            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                            x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11 } } }
+                        }
+                    }
                 });
             } else {
                 chart.data.datasets[0].data = data.v;
+                chart.data.datasets[0].backgroundColor = data.v.map((v, i) => 
+                    (i < 6 ? v > data.b[i] : v < data.b[i]) ? '#f43f5e' : '#38bdf8'
+                );
                 chart.update();
             }
             idx = (idx + 1) % timeline.length;
@@ -142,5 +174,5 @@ dashboard_html = """
 </html>
 """
 
-# 3. عرض المكون النهائي
+# عرض الداش بورد
 components.html(dashboard_html, height=900, scrolling=False)
