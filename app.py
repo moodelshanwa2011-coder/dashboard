@@ -5,127 +5,119 @@ import time
 
 st.set_page_config(layout="wide")
 
-# ---------- PROFESSIONAL STYLE ----------
+# ---------- STYLE ----------
 st.markdown("""
 <style>
 
-html, body, [class*="css"] {
-    background:#0b1220;
+body {
+    background-color:#0b1220;
     color:white;
-    font-family: 'Segoe UI', sans-serif;
+    font-family:Segoe UI;
 }
 
-.title{
+.title {
     text-align:center;
-    font-size:42px;
-    font-weight:600;
-    margin-bottom:5px;
+    font-size:40px;
+    font-weight:bold;
 }
 
-.month{
+.month {
     text-align:center;
-    color:#94a3b8;
-    margin-bottom:35px;
+    color:#9ca3af;
+    margin-bottom:30px;
 }
 
-.grid{
+.grid {
     display:grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
     gap:25px;
-    padding:10px 40px;
+    padding:20px;
 }
 
-.card{
+.card {
     background:#111827;
-    border-radius:18px;
+    border-radius:15px;
     padding:20px;
     text-align:center;
-    box-shadow:0 6px 20px rgba(0,0,0,0.4);
 }
 
-.kpi-name{
-    font-size:14px;
+.kpi-name {
     color:#9ca3af;
-    min-height:45px;
     margin-bottom:15px;
+    font-size:15px;
 }
 
-.circle{
-    width:130px;
-    height:130px;
-    margin:auto;
+.circle {
+    width:120px;
+    height:120px;
     border-radius:50%;
-    background:linear-gradient(145deg,#1f2937,#020617);
+    margin:auto;
+    background:#1f2937;
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:28px;
+    font-size:26px;
     font-weight:bold;
-    box-shadow:0 0 18px rgba(59,130,246,0.4);
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- LOAD EXCEL ----------
+
+# ---------- READ EXCEL ----------
 df = pd.read_excel("GlobCare -KPI_Dashboard_v5.xlsx")
 
 months = df.iloc[:,0]
 metrics = df.columns[1:]
 
 header = st.empty()
-chart_area = st.empty()
+chart_holder = st.empty()
 
-# ---------- LIVE DASHBOARD ----------
+# ---------- LIVE LOOP ----------
 while True:
 
     for i in range(len(df)):
 
-        cards = ""
+        cards_html = ""
+
         values = []
 
         for metric in metrics:
-            value = df.loc[i, metric]
-            values.append(value)
+            val = df.loc[i, metric]
+            values.append(val)
 
-            cards += f"""
+            cards_html += f"""
             <div class="card">
                 <div class="kpi-name">{metric}</div>
-                <div class="circle">{value}</div>
+                <div class="circle">{val}</div>
             </div>
             """
 
-        header.markdown(f"""
+        page_html = f"""
         <div class="title">GlobCare Performance Dashboard</div>
         <div class="month">Month: {months[i]}</div>
 
         <div class="grid">
-        {cards}
+            {cards_html}
         </div>
-        """, unsafe_allow_html=True)
+        """
 
-        # -------- BAR CHART ----------
+        header.markdown(page_html, unsafe_allow_html=True)
+
+        # ----- BAR CHART -----
         chart_df = pd.DataFrame({
             "KPI": metrics,
             "Value": values
         })
 
-        fig = px.bar(
-            chart_df,
-            x="KPI",
-            y="Value",
-            text="Value",
-            height=420
-        )
+        fig = px.bar(chart_df, x="KPI", y="Value", text="Value")
 
         fig.update_layout(
             plot_bgcolor="#0b1220",
             paper_bgcolor="#0b1220",
-            font_color="white",
-            xaxis_title="",
-            yaxis_title=""
+            font_color="white"
         )
 
-        chart_area.plotly_chart(fig, use_container_width=True)
+        chart_holder.plotly_chart(fig, use_container_width=True)
 
         time.sleep(10)
