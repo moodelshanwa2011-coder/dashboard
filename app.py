@@ -2,83 +2,47 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>ICU Riyadh Dashboard</title>
+    <title>ICU Dashboard - SGH Riyadh</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { background-color: #0f172a; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; }
-        .header { border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 20px; }
-        .q-title { font-size: 24px; color: #38bdf8; background: #1e293b; display: inline-block; padding: 10px 20px; border-radius: 10px; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 10px; }
-        .card { background: #1e293b; border-radius: 15px; padding: 15px; border: 1px solid #334155; position: relative; }
-        .circle { width: 100px; height: 100px; border: 8px solid #334155; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; transition: 0.5s; }
-        .blue { border-color: #38bdf8; color: #38bdf8; }
-        .red { border-color: #fb7185; color: #fb7185; }
-        .label { margin-top: 10px; font-size: 14px; color: #94a3b8; }
-        .chart-container { width: 90%; height: 300px; margin: 30px auto; background: #1e293b; padding: 20px; border-radius: 15px; }
+        body { font-family: 'Arial', sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #007bff; padding-bottom: 10px; }
+        .q-label { font-size: 2rem; font-weight: bold; color: #007bff; background: white; padding: 10px 30px; border-radius: 50px; shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        /* تصميم الـ 8 دوائر */
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; padding: 20px; }
+        .kpi-card { background: white; border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 10px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .circle { width: 120px; height: 120px; border-radius: 50%; border: 10px solid #edf2f7; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; transition: all 0.6s ease; }
+        
+        /* حالات الألوان */
+        .safe { border-color: #007bff; color: #007bff; }
+        .danger { border-color: #ef4444; color: #ef4444; }
+        
+        .label { font-size: 1.1rem; font-weight: 600; color: #64748b; }
+        .chart-box { width: 90%; margin: 40px auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 15px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>لوحة أداء العناية المركزة - الرياض</h1>
-    <div class="q-title" id="qLabel">4Q 2023</div>
+    <h1>لوحة مؤشرات أداء العناية المركزة - الرياض</h1>
+    <span class="q-label" id="currentQ">4Q 2023</span>
 </div>
 
 <div class="grid" id="kpiGrid"></div>
 
-<div class="chart-container">
-    <canvas id="barChart"></canvas>
+<div class="chart-box">
+    <canvas id="barChart" height="100"></canvas>
 </div>
 
 <script>
-// البيانات من جدولك (8 مؤشرات عبر 5 فترات زمنية)
-const timeline = [
-    { q: "4Q 2023", v: [0, 7.3, 1.3, 1.5, 0, 5.2, 67, 13], b: [0.04, 26, 1.3, 1.0, 0.4, 1.6, 83, 8.0] },
-    { q: "1Q 2024", v: [0.2, 6.4, 1.2, 2.1, 0.7, 4.8, 83, 20], b: [0.09, 7.7, 2.6, 2.4, 0.9, 4.4, 70, 19] },
-    { q: "2Q 2024", v: [0.0, 6.5, 1.5, 2.0, 0.6, 3.7, 82, 18], b: [0.2, 14, 2.4, 1.0, 0.5, 6.2, 71, 12] },
-    { q: "3Q 2024", v: [0.2, 4.6, 1.2, 1.8, 0.4, 4.5, 83, 18], b: [0.3, 6.9, 2.6, 1.0, 1.0, 4.6, 68, 19] },
-    { q: "1Q 2025", v: [1.5, 4.1, 1.2, 1.9, 0.4, 1.4, 83, 18], b: [0.1, 4.9, 3.0, 6.6, 0.5, 3.9, 70, 19] }
+// البيانات الفعلية المستخرجة من جدولك
+const data = [
+    { q: "4Q 2023", v: [0, 7.30, 1.38, 1.57, 0, 5.21, 67.19, 13.0], b: [0.04, 26.67, 1.3, 1.06, 0.46, 1.6, 83.53, 7.99] },
+    { q: "1Q 2024", v: [0.24, 6.45, 1.28, 2.17, 0.70, 4.84, 82.99, 20.14], b: [0.09, 7.77, 2.67, 2.42, 0.99, 4.49, 70.31, 19.09] },
+    { q: "2Q 2024", v: [0.06, 6.54, 1.56, 2.04, 0.67, 3.74, 82.74, 18.22], b: [0.24, 14.29, 2.42, 1.0, 0.51, 6.25, 71.21, 12.54] },
+    { q: "3Q 2024", v: [0.28, 4.60, 1.20, 1.89, 0.40, 4.51, 83.36, 18.34], b: [0.36, 6.9, 2.63, 1.0, 1.02, 4.69, 68.25, 19.20] },
+    { q: "1Q 2025", v: [1.59, 4.17, 1.26, 1.91, 0.43, 1.43, 83.78, 18.28], b: [0.12, 4.96, 3.02, 6.69, 0.5, 3.97, 70.0, 19.82] }
 ];
 
-const labels = ["سقوط", "HAPI", "CLABSI", "VAE", "CAUTI", "Turnover", "BSN", "Hours"];
-let idx = 0;
-let chart;
-
-function update() {
-    const data = timeline[idx];
-    document.getElementById('qLabel').innerText = data.q;
-    const grid = document.getElementById('kpiGrid');
-    grid.innerHTML = '';
-
-    data.v.forEach((v, i) => {
-        const bm = data.b[i];
-        // أول 6 مؤشرات: لو القيمة أكبر من المرجع = أحمر. آخر 2: لو أقل = أحمر.
-        const isBad = (i < 6) ? (v > bm) : (v < bm);
-        const colorClass = isBad ? 'red' : 'blue';
-
-        grid.innerHTML += `
-            <div class="card">
-                <div class="circle ${colorClass}">${v}</div>
-                <div class="label">${labels[i]}</div>
-                <div style="font-size:10px; color:#64748b">BM: ${bm}</div>
-            </div>`;
-    });
-
-    if(!chart) {
-        chart = new Chart(document.getElementById('barChart'), {
-            type: 'bar',
-            data: { labels: labels, datasets: [{ data: data.v, backgroundColor: '#38bdf8' }] },
-            options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
-        });
-    } else {
-        chart.data.datasets[0].data = data.v;
-        chart.update();
-    }
-    idx = (idx + 1) % timeline.length;
-}
-
-update();
-setInterval(update, 10000); // تحديث كل 10 ثوانٍ
-</script>
-</body>
-</html>
+const labels = ["سقوط المرضى", "إصابات الضغط", "عدوى الدم", "VAE تنفس", "CAUTI مسالك", "دوران العمل", "تعليم
