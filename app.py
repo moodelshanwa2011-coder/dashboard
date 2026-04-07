@@ -3,68 +3,68 @@ import pandas as pd
 import plotly.express as px
 import time
 
-# ======================
-# PAGE SETTINGS
-# ======================
 st.set_page_config(layout="wide")
-st.title("🟢 Live KPI Dashboard")
+st.title("🟢 Live Excel Dashboard")
 
 # ======================
-# AUTO REFRESH (بدون مكتبات إضافية)
-# ======================
-count = st.empty()
-for seconds in range(20, 0, -1):
-    count.info(f"🔄 Refreshing in {seconds} sec")
-    time.sleep(1)
-
-st.rerun()
-
-# ======================
-# FILE UPLOAD
+# Upload Excel
 # ======================
 file = st.file_uploader("Upload Excel File", type=["xlsx"])
 
 if file:
 
     df = pd.read_excel(file)
+
+    # تنظيف الأعمدة تلقائياً (بدون ما نعرف اسمها)
     df.columns = df.columns.str.strip()
 
-    # تحويل الأرقام
-    df["Actual"] = pd.to_numeric(df["Actual"], errors="coerce")
-    df["Target"] = pd.to_numeric(df["Target"], errors="coerce")
+    # اختيار أول عمود نصي = اسم KPI
+    text_cols = df.select_dtypes(include="object").columns
+    num_cols = df.select_dtypes(include="number").columns
+
+    if len(text_cols) == 0 or len(num_cols) == 0:
+        st.error("Excel must contain text column + numbers")
+        st.stop()
+
+    kpi_col = text_cols[0]
+    value_col = num_cols[0]
 
     # ======================
-    # KPI CALCULATIONS
+    # KPI CIRCLES (أرقام داخل دوائر)
     # ======================
-    total_kpi = len(df)
-    avg_actual = df["Actual"].mean()
-    total_actual = df["Actual"].sum()
-    achievement = (total_actual / df["Target"].sum()) * 100
+    total_items = len(df)
+    total_value = df[value_col].sum()
+    avg_value = df[value_col].mean()
+    max_value = df[value_col].max()
 
-    col1, col2, col3, col4 = st.columns(4)
+    c1, c2, c3, c4 = st.columns(4)
 
-    col1.metric("📊 Total KPIs", total_kpi)
-    col2.metric("🎯 Avg Actual", round(avg_actual, 2))
-    col3.metric("💰 Total Actual", round(total_actual, 2))
-    col4.metric("✅ Achievement", f"{achievement:.1f}%")
+    c1.metric("Items", total_items)
+    c2.metric("Total", round(total_value,2))
+    c3.metric("Average", round(avg_value,2))
+    c4.metric("Max", round(max_value,2))
 
     st.divider()
 
     # ======================
-    # CHART
+    # LIVE BAR CHART
     # ======================
     fig = px.bar(
         df,
-        x="KPI",
-        y="Actual",
-        color="Category",
-        title="Actual Performance"
+        x=kpi_col,
+        y=value_col,
+        title="Live Performance"
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
-    st.subheader("📋 Data Table")
     st.dataframe(df, use_container_width=True)
 
 else:
-    st.warning("Upload Excel file first")
+    st.info("Upload Excel file")
+
+# ======================
+# AUTO REFRESH
+# ======================
+time.sleep(20)
+st.rerun()
