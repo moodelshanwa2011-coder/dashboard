@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="ICU Riyadh | Grouped KPIs", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="ICU Riyadh | Executive View", layout="wide", initial_sidebar_state="collapsed")
 
 dashboard_html = """
 <!DOCTYPE html>
@@ -11,11 +11,9 @@ dashboard_html = """
     <style>
         :root {
             --bg: #020617;
-            --card-bg: rgba(15, 23, 42, 0.9);
+            --card-bg: rgba(15, 23, 42, 0.95);
             --neon-blue: #22d3ee;
-            --neon-green: #34d399;
-            --neon-red: #f43f5e;
-            --border-clr: rgba(255, 255, 255, 0.15);
+            --border-clr: rgba(255, 255, 255, 0.1);
             --text-main: #f8fafc;
         }
         
@@ -30,80 +28,98 @@ dashboard_html = """
             display: flex; justify-content: space-between; align-items: center;
             background: var(--card-bg); padding: 15px 40px;
             border-radius: 15px; border: 1px solid var(--border-clr);
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
-        /* حاوية المربعات الكبيرة */
-        .main-grid {
+        /* المربعات الكبيرة التي تحتوي على البيانات الفرعية */
+        .main-layout {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 25px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
             margin-bottom: 25px;
         }
 
-        .parent-card {
+        .mega-card {
             background: var(--card-bg);
             border: 2px solid var(--border-clr);
-            border-radius: 25px;
+            border-radius: 20px;
             padding: 20px;
-            position: relative;
+            min-height: 220px;
+            transition: 0.3s;
         }
 
-        .parent-title {
-            position: absolute; top: -15px; left: 30px;
-            background: var(--neon-blue); color: #020617;
-            padding: 5px 20px; border-radius: 10px;
-            font-weight: 900; font-size: 0.9rem; text-transform: uppercase;
+        .mega-card:hover { border-color: var(--neon-blue); }
+
+        .mega-title {
+            color: var(--neon-blue);
+            font-weight: 900;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(34, 211, 238, 0.2);
+            padding-bottom: 10px;
         }
 
-        .sub-grid {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px;
+        .sub-data-row {
+            display: flex; justify-content: space-between; margin-bottom: 10px;
         }
 
-        .sub-item {
-            background: rgba(255,255,255,0.03);
-            padding: 15px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05);
-            text-align: center;
+        .label { color: #94a3b8; font-size: 0.85rem; font-weight: 600; }
+        .value { font-weight: 900; font-size: 1.2rem; }
+
+        /* منطقة الدوائر المتغيرة */
+        .safety-section {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 20px;
+            height: 300px;
         }
 
-        .sub-val { font-size: 1.8rem; font-weight: 800; display: block; }
-        .sub-label { font-size: 0.7rem; color: #94a3b8; font-weight: bold; }
-        .sub-bm { font-size: 0.6rem; color: #475569; display: block; margin-top: 5px; }
-
-        /* دائرة الـ Safety Score الكبيرة */
-        .footer-section {
-            display: flex; justify-content: center; align-items: center;
-            background: var(--card-bg); border-radius: 25px; padding: 30px;
-            border: 1px solid var(--border-clr); height: 250px;
+        .score-panel {
+            background: var(--card-bg); border-radius: 20px;
+            display: flex; justify-content: space-around; align-items: center;
+            border: 1px solid var(--border-clr);
         }
 
-        .score-circle {
-            width: 180px; height: 180px; border-radius: 50%;
-            border: 12px solid #1e293b; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; position: relative;
-            box-shadow: 0 0 30px rgba(34, 211, 238, 0.2);
+        .circle-container { text-align: center; }
+
+        .circle {
+            width: 160px; height: 160px; border-radius: 50%;
+            border: 10px solid #1e293b; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: 1s ease-in-out;
         }
 
-        .score-num { font-size: 3.5rem; font-weight: 900; }
-        .safe { color: var(--neon-blue); }
-        .alert { color: var(--neon-red); }
+        .circle-num { font-size: 3rem; font-weight: 900; }
+        .circle-label { margin-top: 10px; font-weight: 800; color: #94a3b8; font-size: 0.8rem; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1 style="margin:0; font-size:1.5rem;">ICU PERFORMANCE <span style="color:var(--neon-blue)">GROUPED VIEW</span></h1>
-        <div style="background:#1e293b; padding:10px 25px; border-radius:12px; font-weight:900;" id="qDisplay">...</div>
+        <h1 style="margin:0; font-size:1.5rem;">ICU PERFORMANCE | <span id="qTag">4Q 2023</span></h1>
+        <div style="font-weight:900; color:var(--neon-blue);">SAUDI GERMAN RIYADH</div>
     </div>
 
-    <div class="main-grid" id="mainGrid"></div>
+    <div class="main-layout" id="megaGrid"></div>
 
-    <div class="footer-section">
-        <div style="text-align:center; margin-right:50px;">
-            <h2 style="margin:0; font-size:1.2rem; color:var(--neon-blue);">UNIT SAFETY SCORE</h2>
-            <p style="color:#64748b; font-size:0.8rem;">Calculated based on Clinical Targets</p>
+    <div class="safety-section">
+        <div class="score-panel">
+            <div class="circle-container">
+                <div class="circle" id="ring1" style="border-color: #22d3ee;">
+                    <div class="circle-num" id="score1">0%</div>
+                </div>
+                <div class="circle-label">UNIT SAFETY SCORE</div>
+            </div>
+            <div class="circle-container">
+                <div class="circle" id="ring2" style="border-color: #34d399;">
+                    <div class="circle-num" id="score2">0%</div>
+                </div>
+                <div class="circle-label">BSN EDUCATION</div>
+            </div>
         </div>
-        <div class="score-circle" id="mainRing">
-            <div class="score-num" id="safetyScore">0%</div>
+        
+        <div class="mega-card" style="display:flex; flex-direction:column; justify-content:center;">
+            <div class="mega-title">MONTHLY HIGHLIGHTS</div>
+            <div id="highlights">...</div>
         </div>
     </div>
 
@@ -111,81 +127,61 @@ dashboard_html = """
         const clinicalData = [
             { 
                 q: "4Q 2023",
+                safety: 88,
+                bsn: 67,
                 groups: [
-                    { title: "Patient Safety", items: ["Falls", "HAPI"], vals: [0, 7.30], bms: [0.04, 26.67] },
-                    { title: "Device Infections", items: ["CLABSI", "CAUTI"], vals: [1.38, 0], bms: [1.3, 0.46] },
-                    { title: "Respiratory", items: ["VAE", "VAP"], vals: [1.57, 0], bms: [1.06, 0] },
-                    { title: "Staffing Metrics", items: ["Turnover", "BSN %"], vals: [5.21, 67.2], bms: [1.6, 83.5] }
+                    { title: "Falls Metric", subs: [["Total Falls", 0], ["Injury Falls", 0], ["Benchmark", 0.04]] },
+                    { title: "Pressure Injury", subs: [["HAPI Count", 7.3], ["Target", 26.6]] },
+                    { title: "Infections", subs: [["CLABSI", 1.38], ["CAUTI", 0], ["VAE", 1.57]] }
                 ]
             },
             { 
                 q: "1Q 2024",
+                safety: 75,
+                bsn: 83,
                 groups: [
-                    { title: "Patient Safety", items: ["Falls", "HAPI"], vals: [0.24, 6.45], bms: [0.09, 7.77] },
-                    { title: "Device Infections", items: ["CLABSI", "CAUTI"], vals: [1.28, 0.70], bms: [2.67, 0.99] },
-                    { title: "Respiratory", items: ["VAE", "VAP"], vals: [2.17, 0], bms: [2.42, 0] },
-                    { title: "Staffing Metrics", items: ["Turnover", "BSN %"], vals: [4.84, 83.0], bms: [4.49, 70.3] }
+                    { title: "Falls Metric", subs: [["Total Falls", 0.24], ["Injury Falls", 0.1], ["Benchmark", 0.09]] },
+                    { title: "Pressure Injury", subs: [["HAPI Count", 6.45], ["Target", 7.77]] },
+                    { title: "Infections", subs: [["CLABSI", 1.28], ["CAUTI", 0.70], ["VAE", 2.17]] }
                 ]
             }
-            // يمكن إضافة باقي الأرباع هنا بنفس النسق
         ];
 
         let step = 0;
 
-        function update() {
+        function refresh() {
             const data = clinicalData[step];
-            document.getElementById('qDisplay').innerText = data.q;
+            document.getElementById('qTag').innerText = data.q;
             
-            const grid = document.getElementById('mainGrid');
+            // تحديث المربعات الكبيرة
+            const grid = document.getElementById('megaGrid');
             grid.innerHTML = '';
-            
-            let totalItems = 0;
-            let metTargets = 0;
-
-            data.groups.forEach(group => {
-                let itemsHtml = '';
-                group.items.forEach((name, i) => {
-                    totalItems++;
-                    const val = group.vals[i];
-                    const bm = group.bms[i];
-                    
-                    // منطق الحساب: إذا كان المؤشر (Infection/Fall) أقل من الـ Benchmark فهو آمن
-                    const isSafe = (name === "BSN %") ? (val >= bm) : (val <= bm);
-                    if(isSafe) metTargets++;
-
-                    itemsHtml += `
-                        <div class="sub-item">
-                            <span class="sub-label">${name}</span>
-                            <span class="sub-val ${isSafe?'safe':'alert'}">${val}</span>
-                            <span class="sub-bm">Target: ${bm}</span>
-                        </div>`;
-                });
-
+            data.groups.forEach(g => {
+                let rows = g.subs.map(s => `
+                    <div class="sub-data-row">
+                        <span class="label">${s[0]}</span>
+                        <span class="value">${s[1]}</span>
+                    </div>`).join('');
+                
                 grid.innerHTML += `
-                    <div class="parent-card">
-                        <div class="parent-title">${group.title}</div>
-                        <div class="sub-grid">${itemsHtml}</div>
+                    <div class="mega-card">
+                        <div class="mega-title">${g.title}</div>
+                        ${rows}
                     </div>`;
             });
 
-            // حساب الـ Unit Safety Score
-            const score = Math.round((metTargets / totalItems) * 100);
-            const scoreEl = document.getElementById('safetyScore');
-            const ring = document.getElementById('mainRing');
+            // تحديث الدوائر المتغيرة
+            document.getElementById('score1').innerText = data.safety + "%";
+            document.getElementById('score2').innerText = data.bsn + "%";
             
-            scoreEl.innerText = score + "%";
-            const color = score >= 75 ? "#22d3ee" : "#f43f5e";
-            scoreEl.style.color = color;
-            ring.style.borderColor = color;
-
             step = (step + 1) % clinicalData.length;
         }
 
-        update();
-        setInterval(update, 20000);
+        refresh();
+        setInterval(refresh, 20000);
     </script>
 </body>
 </html>
 """
 
-components.html(dashboard_html, height=900, scrolling=False)
+components.html(dashboard_html, height=850, scrolling=False)
