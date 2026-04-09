@@ -1,9 +1,8 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-# إعداد الصفحة لتكون بملء الشاشة وبدون هوامش
 st.set_page_config(
-    page_title="ICU Riyadh | Executive Dashboard",
+    page_title="ICU Executive | Live Analytics",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -13,11 +12,10 @@ dashboard_html = """
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg: #020617;
-            --card-bg: rgba(15, 23, 42, 0.8);
+            --card-bg: rgba(15, 23, 42, 0.85);
             --neon-blue: #22d3ee;
             --neon-red: #f43f5e;
             --border-clr: rgba(255, 255, 255, 0.1);
@@ -26,227 +24,160 @@ dashboard_html = """
         }
         
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: var(--bg);
             color: var(--text-main);
-            margin: 0;
-            padding: 25px;
-            overflow: hidden;
+            margin: 0; padding: 25px; overflow: hidden;
         }
 
-        .dashboard-container { max-width: 1580px; margin: 0 auto; }
-
-        /* Header Style */
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            padding: 20px 45px;
-            border-radius: 20px;
-            border: 1px solid var(--border-clr);
-            margin-bottom: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--card-bg); backdrop-filter: blur(20px);
+            padding: 15px 45px; border-radius: 20px; border: 1px solid var(--border-clr);
+            margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .q-badge {
             background: linear-gradient(135deg, #0891b2, #22d3ee);
-            color: #020617;
-            padding: 10px 35px;
-            border-radius: 12px;
-            font-weight: 900;
-            font-size: 1.4rem;
-            box-shadow: 0 0 20px rgba(34, 211, 238, 0.4);
+            color: #020617; padding: 8px 30px; border-radius: 12px;
+            font-weight: 900; font-size: 1.2rem;
         }
 
-        /* KPI Grid with Professional Borders */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 25px;
-        }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
 
         .kpi-card {
-            background: var(--card-bg);
-            border-radius: 22px;
-            padding: 25px;
-            text-align: center;
-            /* حدود واضحة واحترافية */
-            border: 2px solid var(--border-clr);
-            position: relative;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            background: var(--card-bg); border-radius: 20px; padding: 20px;
+            text-align: center; border: 2px solid var(--border-clr);
+            transition: 0.4s ease;
         }
 
-        .kpi-card:hover {
-            transform: translateY(-8px);
-            border-color: var(--neon-blue);
-            box-shadow: 0 0 25px rgba(34, 211, 238, 0.2);
-            background: rgba(34, 211, 238, 0.03);
+        .val-large { font-size: 2.8rem; font-weight: 900; line-height: 1; margin-bottom: 8px; }
+        .safe { color: var(--neon-blue); text-shadow: 0 0 10px rgba(34, 211, 238, 0.4); }
+        .alert { color: var(--neon-red); text-shadow: 0 0 10px rgba(244, 63, 94, 0.4); }
+
+        /* Weekly Section Styles */
+        .bottom-section { display: grid; grid-template-columns: 2.5fr 1fr; gap: 20px; height: 400px; }
+
+        .weekly-panel {
+            background: var(--card-bg); border-radius: 25px; padding: 25px;
+            border: 1px solid var(--border-clr); display: flex; flex-direction: column;
         }
 
-        .kpi-title { 
-            font-size: 0.9rem; 
-            font-weight: 700; 
-            color: var(--text-dim); 
-            text-transform: uppercase; 
-            margin-bottom: 15px;
-            letter-spacing: 1px;
+        .weekly-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; flex-grow: 1; }
+
+        .week-box {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border-clr);
+            border-radius: 15px; padding: 15px; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; position: relative; overflow: hidden;
         }
 
-        .val-large {
-            font-size: 3.5rem;
-            font-weight: 900;
-            line-height: 1;
-            margin-bottom: 10px;
+        .week-label { font-size: 0.7rem; color: var(--text-dim); font-weight: 800; margin-bottom: 5px; }
+        .week-val { font-size: 1.8rem; font-weight: 900; color: var(--neon-blue); }
+
+        /* Music Visualizer Bars */
+        .visualizer {
+            display: flex; align-items: flex-end; gap: 3px; height: 30px; margin-top: 10px;
         }
-
-        .safe { color: var(--neon-blue); text-shadow: 0 0 15px rgba(34, 211, 238, 0.4); }
-        .alert { color: var(--neon-red); text-shadow: 0 0 15px rgba(244, 63, 94, 0.4); }
-
-        /* Benchmark Styling directly under the value */
-        .bm-container {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #475569;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 5px 15px;
-            border-radius: 8px;
-            display: inline-block;
-            border: 1px solid rgba(255,255,255,0.05);
+        .bar {
+            width: 4px; background: var(--neon-blue); border-radius: 2px;
+            animation: bounce 1s ease-in-out infinite;
         }
-
-        /* Analytics Section */
-        .bottom-section {
-            display: grid;
-            grid-template-columns: 2fr 1.1fr;
-            gap: 25px;
-            height: 380px;
-        }
-
-        .glass-panel {
-            background: var(--card-bg);
-            border-radius: 25px;
-            padding: 30px;
-            border: 1px solid var(--border-clr);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        @keyframes bounce {
+            0%, 100% { height: 5px; opacity: 0.3; }
+            50% { height: 25px; opacity: 1; }
         }
 
         .score-circle {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            border: 12px solid #1e293b;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: all 1s ease;
-            position: relative;
+            width: 180px; height: 180px; border-radius: 50%; border: 10px solid #1e293b;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-
-        .score-num { font-size: 4rem; font-weight: 900; line-height: 1; }
-        .score-txt { font-size: 1.1rem; font-weight: 700; color: var(--text-dim); margin-top: 15px; }
     </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <div class="header">
-            <div>
-                <h1 style="margin:0; font-size:1.8rem; letter-spacing:1px;">ICU <span style="color:var(--neon-blue)">PERFORMANCE</span> TRACKER</h1>
-                <p style="margin:5px 0 0 0; color:var(--text-dim); font-weight:600;">SAUDI GERMAN HEALTH | RIYADH</p>
-            </div>
-            <div class="q-badge" id="qLabel">4Q 2023</div>
+    <div class="header">
+        <div>
+            <h1 style="margin:0; font-size:1.5rem;">ICU <span style="color:var(--neon-blue)">DYNAMIC</span> MONITOR</h1>
+            <p id="monthDisplay" style="margin:2px 0 0 0; color:var(--text-dim); font-weight:bold;">MARCH - APRIL 2026</p>
         </div>
+        <div class="q-badge" id="qLabel">Q1 2026</div>
+    </div>
 
-        <div class="grid" id="kpiGrid"></div>
+    <div class="grid" id="kpiGrid"></div>
 
-        <div class="bottom-section">
-            <div class="glass-panel">
-                <canvas id="barChartCanvas"></canvas>
+    <div class="bottom-section">
+        <div class="weekly-panel">
+            <h3 style="margin: 0 0 15px 0; color: var(--neon-blue); font-size: 0.9rem;">WEEKLY LIVE PERFORMANCE (MARCH/APRIL)</h3>
+            <div class="weekly-grid" id="weeklyGrid"></div>
+        </div>
+        
+        <div class="weekly-panel" style="align-items: center; justify-content: center;">
+            <div class="score-circle" id="ring">
+                <div id="scoreVal" style="font-size: 3.5rem; font-weight: 900;">0%</div>
             </div>
-            <div class="glass-panel">
-                <div class="score-circle" id="circleBorder">
-                    <div class="score-num" id="scoreVal">0%</div>
-                </div>
-                <div class="score-txt">OVERALL SAFETY SCORE</div>
-                <p style="color:#475569; font-size:0.75rem; margin-top:10px;">Benchmarked against Global Standards</p>
-            </div>
+            <div style="margin-top:15px; font-weight:800; color:var(--text-dim);">SAFETY SCORE</div>
         </div>
     </div>
 
     <script>
         const clinicalData = [
-            { q: "4Q 2023", v: [0, 7.30, 1.38, 1.57, 0, 5.21, 67.2, 13.0], b: [0.04, 26.6, 1.3, 1.0, 0.4, 1.6, 83.5, 8.0] },
-            { q: "1Q 2024", v: [0.24, 6.45, 1.28, 2.17, 0.70, 4.84, 83.0, 20.1], b: [0.09, 7.7, 2.6, 2.4, 0.9, 4.4, 70.3, 19.1] },
-            { q: "2Q 2024", v: [0.06, 6.54, 1.56, 2.04, 0.67, 3.74, 82.7, 18.2], b: [0.24, 14.2, 2.4, 1.0, 0.5, 6.2, 71.2, 12.5] },
-            { q: "3Q 2024", v: [0.28, 4.60, 1.20, 1.89, 0.40, 4.51, 83.4, 18.3], b: [0.36, 6.9, 2.6, 1.0, 1.0, 4.6, 68.2, 19.2] },
-            { q: "1Q 2025", v: [1.59, 4.17, 1.26, 1.91, 0.43, 1.43, 83.8, 18.2], b: [0.12, 4.9, 3.0, 6.6, 0.5, 3.9, 70.0, 19.8] }
+            { q: "MARCH WK1", v: [0.1, 6.2, 1.1, 1.4, 0.2, 4.1, 80, 18], b: [0.2, 7.0, 1.3, 1.5, 0.5, 4.5, 75, 15], w: [0.12, 0.15, 0.08, 0.11] },
+            { q: "MARCH WK2", v: [0.0, 5.8, 1.0, 2.1, 0.1, 3.8, 82, 19], b: [0.2, 7.0, 1.3, 1.5, 0.5, 4.5, 75, 15], w: [0.09, 0.11, 0.14, 0.10] },
+            { q: "APRIL WK1", v: [0.2, 4.5, 1.4, 1.8, 0.6, 4.2, 85, 20], b: [0.3, 5.0, 1.5, 2.0, 0.8, 4.0, 80, 18], w: [0.22, 0.19, 0.25, 0.18] },
+            { q: "APRIL WK2", v: [0.1, 4.2, 1.2, 1.5, 0.3, 3.5, 88, 22], b: [0.3, 5.0, 1.5, 2.0, 0.8, 4.0, 80, 18], w: [0.15, 0.17, 0.20, 0.12] }
         ];
 
-        const kpis = ["Falls", "Pressure Injury", "CLABSI", "VAE", "CAUTI", "Turnover", "BSN Education", "RN Hours"];
-        let step = 0; let mainChart;
+        const kpis = ["Falls", "Pressure", "CLABSI", "VAE", "CAUTI", "Turnover", "BSN Edu", "RN Hours"];
+        let step = 0;
 
         function update() {
-            const current = clinicalData[step];
-            document.getElementById('qLabel').innerText = current.q;
+            const data = clinicalData[step];
+            document.getElementById('qLabel').innerText = data.q;
+            
+            // 1. Update Top KPIs
             const grid = document.getElementById('kpiGrid');
             grid.innerHTML = '';
             let met = 0;
-
-            current.v.forEach((val, i) => {
-                const isBad = (i < 6) ? (val > current.b[i]) : (val < current.b[i]);
-                const cls = isBad ? 'alert' : 'safe';
+            data.v.forEach((val, i) => {
+                const isBad = (i < 6) ? (val > data.b[i]) : (val < data.b[i]);
                 if(!isBad) met++;
-                
                 grid.innerHTML += `
                     <div class="kpi-card">
-                        <div class="kpi-title">${kpis[i]}</div>
-                        <div class="val-large ${cls}">${val}</div>
-                        <div class="bm-container">Benchmark: ${current.b[i]}</div>
+                        <div style="font-size:0.8rem; color:var(--text-dim); font-weight:700;">${kpis[i]}</div>
+                        <div class="val-large ${isBad?'alert':'safe'}">${val}</div>
+                        <div style="font-size:0.7rem; opacity:0.6;">BM: ${data.b[i]}</div>
                     </div>`;
             });
 
-            const score = Math.round((met/8)*100);
-            const scoreEl = document.getElementById('scoreVal');
-            const ring = document.getElementById('circleBorder');
-            
-            scoreEl.innerText = score + "%";
-            const color = score >= 75 ? "#22d3ee" : "#f43f5e";
-            scoreEl.style.color = color;
-            ring.style.borderColor = color;
-            ring.style.boxShadow = `0 0 35px ${color}44`;
+            // 2. Update Weekly Matrix with Music Bars
+            const wGrid = document.getElementById('weeklyGrid');
+            wGrid.innerHTML = '';
+            data.w.forEach((wv, i) => {
+                wGrid.innerHTML += `
+                    <div class="week-box">
+                        <div class="week-label">WEEK 0${i+1} DATA</div>
+                        <div class="week-val">${wv}</div>
+                        <div class="visualizer">
+                            <div class="bar" style="animation-delay: 0.1s"></div>
+                            <div class="bar" style="animation-delay: 0.3s"></div>
+                            <div class="bar" style="animation-delay: 0.5s"></div>
+                            <div class="bar" style="animation-delay: 0.2s"></div>
+                            <div class="bar" style="animation-delay: 0.4s"></div>
+                        </div>
+                    </div>`;
+            });
 
-            if(!mainChart) {
-                const ctx = document.getElementById('barChartCanvas').getContext('2d');
-                mainChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: { 
-                        labels: kpis, 
-                        datasets: [{ data: current.v, backgroundColor: '#22d3ee', borderRadius: 6, barThickness: 25 }] 
-                    },
-                    options: { 
-                        maintainAspectRatio: false, 
-                        plugins: { legend: { display: false } },
-                        scales: { 
-                            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
-                            x: { ticks: { color: '#f8fafc', font: { weight: 'bold' } } }
-                        }
-                    }
-                });
-            } else {
-                mainChart.data.datasets[0].data = current.v;
-                mainChart.update();
-            }
+            // 3. Update Score
+            const score = Math.round((met/8)*100);
+            document.getElementById('scoreVal').innerText = score + "%";
+            const clr = score >= 75 ? "#22d3ee" : "#f43f5e";
+            document.getElementById('scoreVal').style.color = clr;
+            document.getElementById('ring').style.borderColor = clr;
+
             step = (step + 1) % clinicalData.length;
         }
-        update(); setInterval(update, 8000);
+
+        update();
+        setInterval(update, 20000); // تحديث كل 20 ثانية
     </script>
 </body>
 </html>
