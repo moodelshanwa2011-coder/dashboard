@@ -5,74 +5,63 @@ import time
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="ICU Dashboard", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. CSS - إضافة الأعمدة الموسيقية المتحركة (Visualizer)
+# 2. CSS المعتمد - مع إضافة الأعمدة الموسيقية فقط
 st.markdown("""
     <style>
     [data-testid="stAppViewContainer"] { background-color: #000000; color: #ffffff; }
     
-    /* حركة الأعمدة الموسيقية الخلفية */
-    .music-bars {
-        position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
-        display: flex; justify-content: space-around; align-items: flex-end;
-        opacity: 0.15; z-index: 1; padding: 0 5px; box-sizing: border-box;
+    /* الأعمدة الموسيقية */
+    .visualizer {
+        position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+        display: flex; gap: 3px; height: 30px; align-items: flex-end; z-index: 5; opacity: 0.4;
     }
-    .bar {
-        width: 4px; background: #00d4ff; border-radius: 2px;
-        animation: bounce 1.2s ease-in-out infinite;
-    }
-    .bar:nth-child(2) { animation-delay: 0.2s; }
-    .bar:nth-child(3) { animation-delay: 0.4s; }
-    .bar:nth-child(4) { animation-delay: 0.1s; }
-    .bar:nth-child(5) { animation-delay: 0.3s; }
+    .v-bar { width: 3px; background: #00d4ff; animation: bounce 1s ease-in-out infinite; }
+    .v-bar:nth-child(1) { animation-delay: 0.1s; height: 40%; }
+    .v-bar:nth-child(2) { animation-delay: 0.3s; height: 70%; }
+    .v-bar:nth-child(3) { animation-delay: 0.2s; height: 50%; }
+    .v-bar:nth-child(4) { animation-delay: 0.4s; height: 90%; }
+    .v-bar:nth-child(5) { animation-delay: 0.1s; height: 60%; }
+    @keyframes bounce { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.8); } }
 
-    @keyframes bounce {
-        0%, 100% { height: 10%; }
-        50% { height: 80%; }
-    }
-
-    /* المربعات والدوائر - الحفاظ على الـ rotate-wave وإضافة الـ music bars */
-    .kpi-card, .circle-container {
+    .kpi-card {
         position: relative; background-color: #0a0a0a; border-radius: 20px;
         overflow: hidden; display: flex; flex-direction: column; justify-content: center;
-        text-align: center; border: 2px solid #1a1a1a;
+        text-align: center; height: 260px; margin-bottom: 20px;
+        border: 2px solid #1a1a1a; box-shadow: 0 0 20px rgba(0, 212, 255, 0.2); 
     }
-    .kpi-card { height: 260px; margin-bottom: 20px; }
-    .circle-container { width: 280px; height: 280px; border-radius: 50%; margin: auto; }
-
     .kpi-card::before, .circle-container::before {
         content: ''; position: absolute; width: 250%; height: 250%;
         background: conic-gradient(#00d4ff, #001a1a, #00d4ff);
         animation: rotate-wave 4s linear infinite; top: 50%; left: 50%;
     }
     .kpi-card::after, .circle-container::after {
-        content: ''; position: absolute; background-color: #0a0a0a; inset: 5px; border-radius: 16px; z-index: 2;
+        content: ''; position: absolute; background-color: #0a0a0a; inset: 5px; border-radius: 16px;
+    }
+    .circle-container {
+        position: relative; width: 280px; height: 280px; border-radius: 50%;
+        margin: auto; overflow: hidden; display: flex; justify-content: center; align-items: center; text-align: center;
+        border: 2px solid #1a1a1a; box-shadow: 0 0 25px rgba(0, 212, 255, 0.25);
     }
     .circle-container::after { border-radius: 50%; inset: 10px; }
-    
     @keyframes rotate-wave { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
-    
     .content-box { position: relative; z-index: 10; width: 100%; padding: 10px; }
-    .label-full { color: #aaaaaa; font-size: 22px; font-weight: 900; text-transform: uppercase; }
+    .label-full { color: #aaaaaa; font-size: 22px; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
     .val-full { color: #00d4ff; font-size: 50px; font-weight: 900; line-height: 1; }
-    .bm-full { color: #444444; font-size: 14px; font-weight: bold; margin-top: 10px; }
-
-    /* المربعات الذهبية و الـ Gauge السفلية */
+    .bm-full { color: #444444; font-size: 14px; font-weight: bold; margin-top: 10px; text-transform: uppercase; }
     .census-box-mini { 
         position: relative; background: #0a0a0a; border: 2px solid #FFD700; border-radius: 12px; 
-        padding: 10px 20px; overflow: hidden;
+        padding: 10px 20px; text-align: left; margin-bottom: 15px; overflow: hidden;
     }
-    .gauge-wrapper { position: relative; overflow: hidden; border-radius: 50% 50% 0 0; }
-
-    .side-header { color: #00d4ff; font-size: 26px; font-weight: 900; margin-bottom: 15px; }
+    .census-num-mini { color: #FFD700; font-size: 38px; font-weight: 900; position: relative; z-index: 10;}
+    .side-header { color: #00d4ff; font-size: 26px; font-weight: 900; margin-bottom: 15px; text-transform: uppercase; }
     .gauge-label-bottom { color: #ffffff; font-size: 14px; font-weight: 900; text-transform: uppercase; margin-top: -20px; text-align: center; }
     </style>
     """, unsafe_allow_html=True)
 
-# دالة لتوليد الأعمدة الموسيقية
-def music_bars_html():
-    return '<div class="music-bars"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>'
+# دالة الأعمدة الموسيقية
+m_bars = '<div class="visualizer"><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div></div>'
 
-# 3. داتا ICU المعتمدة
+# 3. إدارة البيانات
 if 'step' not in st.session_state: st.session_state.step = 0
 
 pdf_quarters = [
@@ -81,29 +70,24 @@ pdf_quarters = [
     {"q": "1Q 2025", "sq": [1.59, 0.80, 4.17, 3.02, 0.00, 6.69], "sq_bm": [0.12, 0.03, 4.96, 1.26, 0.43, 1.91],
      "cir": [12.50, 6.69, 1.43, 12.87, 70.00, 0.00], "cir_bm": [8.23, 1.91, 3.97, 19.15, 83.78, 0.26]}
 ]
-
-device_weeks = [
-    {"w": "Week 1", "census": 23, "occ": "78%", "vals": [12, 16, 4, 3.5]},
-    {"w": "Week 2", "census": 28, "occ": "93%", "vals": [11, 15, 6, 4.5]}
-]
+device_weeks = [{"w": "Week 1", "census": 23, "occ": "78%", "vals": [12, 16, 4, 3.5]}, {"w": "Week 2", "census": 28, "occ": "93%", "vals": [11, 15, 6, 4.5]}]
 
 cur_pdf = pdf_quarters[st.session_state.step % len(pdf_quarters)]
 cur_dev = device_weeks[st.session_state.step % len(device_weeks)]
 
 # --- العرض ---
 st.markdown(f"<h1 style='text-align: center; color: #00d4ff; font-size: 50px; font-weight:900;'>ICU DASHBOARD</h1>", unsafe_allow_html=True)
-st.markdown(f"<p style='text-align: center; color: #FFD700; font-size: 20px; font-weight:bold;'>PERIOD: {cur_pdf['q']}</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center; color: #FFD700; font-size: 20px; font-weight:bold;'>QUARTERLY PERFORMANCE: {cur_pdf['q']}</p>", unsafe_allow_html=True)
 
-# مربعات علوية
 sq_names = ["Falls", "Injury Falls", "HAPI %", "CLABSI", "CAUTI", "VAE Rate"]
 c1 = st.columns(6)
 for i in range(6):
     v, b = cur_pdf['sq'][i], cur_pdf['sq_bm'][i]
     color = "#00ffaa" if v <= b else "#ff4b4b"
     with c1[i]:
-        st.markdown(f'<div class="kpi-card">{music_bars_html()}<div class="content-box"><div class="label-full">{sq_names[i]}</div><div class="val-full" style="color:{color}">{v}</div><div class="bm-full">BM: {b}</div></div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card">{m_bars}<div class="content-box"><div class="label-full">{sq_names[i]}</div><div class="val-full" style="color:{color}">{v}</div><div class="bm-full">BENCHMARK: {b}</div></div></div>', unsafe_allow_html=True)
 
-# دوائر وسطى
+st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
 cir_names = ["Restraints", "VAE Rate", "Turnover", "Nurse Hr", "RN Edu", "C-Diff"]
 c2 = st.columns(6)
 for i in range(6):
@@ -111,26 +95,24 @@ for i in range(6):
     is_rev = any(x in cir_names[i] for x in ["Hr", "Edu"])
     color = "#00ffaa" if (v >= b if is_rev else v <= b) else "#ff4b4b"
     with c2[i]:
-        st.markdown(f'<div class="circle-container">{music_bars_html()}<div class="content-box"><div class="label-full" style="font-size:18px;">{cir_names[i]}</div><div class="val-full" style="color:{color}; font-size:42px;">{v}</div><div class="bm-full">BM: {b}</div></div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="circle-container">{m_bars}<div class="content-box"><div class="label-full" style="font-size:18px;">{cir_names[i]}</div><div class="val-full" style="color:{color}; font-size:42px;">{v}</div><div class="bm-full">BENCHMARK: {b}</div></div></div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='border-color:#111; margin:40px 0;'>", unsafe_allow_html=True)
 
-# الجزء السفلي
 col_left, col_right = st.columns([2.2, 1.8])
 with col_left:
     sub_c1, sub_c2 = st.columns(2)
     with sub_c1:
-        st.markdown(f'<div class="census-box-mini">{music_bars_html()}<div style="position:relative; z-index:10;"><div style="color:#555; font-size:12px; font-weight:bold;">CENSUS</div><div style="color:#FFD700; font-size:38px; font-weight:900;">{cur_dev["census"]}</div></div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="census-box-mini">{m_bars}<div style="color:#555; font-size:12px; font-weight:bold; position:relative; z-index:10;">CURRENT CENSUS</div><div class="census-num-mini">{cur_dev["census"]}</div></div>', unsafe_allow_html=True)
     with sub_c2:
-        st.markdown(f'<div class="census-box-mini" style="border-color:#00d4ff;">{music_bars_html()}<div style="position:relative; z-index:10;"><div style="color:#555; font-size:12px; font-weight:bold;">OCCUPANCY</div><div style="color:#00d4ff; font-size:38px; font-weight:900;">{cur_dev["occ"]}</div></div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="census-box-mini" style="border-color:#00d4ff;">{m_bars}<div style="color:#555; font-size:12px; font-weight:bold; position:relative; z-index:10;">OCCUPANCY RATE</div><div class="census-num-mini" style="color:#00d4ff;">{cur_dev["occ"]}</div></div>', unsafe_allow_html=True)
     
-    st.markdown(f'<div class="side-header">ATTACHED DEVICES ({cur_dev["w"]})</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="side-header">ATTACHED DEVICES <span style="color:#FFD700; font-size:16px;">({cur_dev["w"]})</span></div>', unsafe_allow_html=True)
     g_cols = st.columns(4)
     dev_info = [("Pt with ETT", 36, [10, 18]), ("Pt with Foley", 36, [24, 30]), ("Pt with CVC", 36, [16, 22]), ("Avg Stay", 10, [4, 6])]
     for i, (name, mx, steps) in enumerate(dev_info):
         with g_cols[i]:
-            st.markdown('<div class="gauge-wrapper">', unsafe_allow_html=True)
-            st.markdown(music_bars_html(), unsafe_allow_html=True) # الموسيقى خلف الـ Gauge
+            st.markdown(f'<div style="position:relative;">{m_bars}', unsafe_allow_html=True)
             fig = go.Figure(go.Indicator(
                 mode = "gauge+number", value = cur_dev['vals'][i],
                 number = {'font': {'size': 35, 'color': '#fff'}},
@@ -139,16 +121,14 @@ with col_left:
             ))
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(t=10, b=0, l=10, r=10), height=120)
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-            st.markdown('</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="gauge-label-bottom">{name}</div>', unsafe_allow_html=True)
+            st.markdown(f'</div><div class="gauge-label-bottom">{name}</div>', unsafe_allow_html=True)
 
 with col_right:
-    st.markdown('<div class="side-header" style="margin-left:20px;">ANALYTICS</div>', unsafe_allow_html=True)
+    st.markdown('<div class="side-header" style="margin-left:20px;">PERFORMANCE ANALYTICS</div>', unsafe_allow_html=True)
     fig_bar = go.Figure()
     fig_bar.add_trace(go.Bar(x=sq_names, y=cur_pdf['sq'], name="Current", marker_color='#00d4ff'))
     fig_bar.add_trace(go.Bar(x=sq_names, y=cur_pdf['sq_bm'], name="Benchmark", marker_color='#1a1a1a'))
-    fig_bar.update_layout(height=400, barmode='group', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', 
-                          margin=dict(t=20, b=20, l=0, r=0), legend=dict(font=dict(color="#888"), orientation="h", y=1.2))
+    fig_bar.update_layout(height=400, barmode='group', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(t=20, b=20, l=0, r=0), legend=dict(font=dict(color="#888"), orientation="h", y=1.2))
     st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
 
 time.sleep(15)
