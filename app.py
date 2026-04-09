@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="ICU Riyadh | Pro Dashboard", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="ICU Riyadh | Ultra-Pro Dashboard", layout="wide", initial_sidebar_state="collapsed")
 
 dashboard_html = """
 <!DOCTYPE html>
@@ -11,170 +11,191 @@ dashboard_html = """
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg: #050a18;
-            --card: rgba(16, 24, 48, 0.9);
-            --neon: #00f2ff;
-            --danger: #ff3131;
-            --border: rgba(0, 242, 255, 0.15);
+            --bg: #01040a;
+            --card-bg: rgba(13, 17, 23, 0.95);
+            --neon-blue: #00d2ff;
+            --neon-green: #39ff14;
+            --danger: #ff003c;
+            --border-glow: rgba(0, 210, 255, 0.3);
         }
         
         body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg); color: #fff; margin: 0; padding: 15px; overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg); color: #e6edf3; margin: 0; padding: 10px; overflow: hidden;
         }
 
-        /* Header */
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 30px; background: var(--card); border: 1px solid var(--border);
-            border-radius: 12px; margin-bottom: 15px; box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        /* تصميم الحدود الاحترافية */
+        .glass-panel {
+            background: var(--card-bg);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            position: relative;
+            transition: border 0.5s ease;
         }
+        .glass-panel:hover { border-color: var(--neon-blue); box-shadow: 0 0 20px var(--border-glow); }
 
-        /* Layout العضوي - المربعات ليست متساوية */
-        .dashboard-grid {
+        /* الهيكل التنظيمي للمربعات */
+        .main-layout {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            grid-auto-rows: minmax(180px, auto);
-            gap: 15px;
+            grid-auto-rows: minmax(140px, auto);
+            gap: 12px;
+            margin-bottom: 12px;
         }
 
-        .container {
-            background: var(--card); border: 1px solid var(--border);
-            border-radius: 16px; padding: 15px; position: relative;
-            transition: 0.3s;
+        .category-title {
+            font-size: 0.75rem; font-weight: 900; color: var(--neon-blue);
+            text-transform: uppercase; letter-spacing: 1.5px;
+            margin-bottom: 12px; padding-left: 10px; border-left: 3px solid var(--neon-blue);
         }
 
-        /* جعل بعض المربعات أكبر من غيرها */
-        .large { grid-column: span 2; } 
-        .tall { grid-row: span 2; }
-
-        .title {
-            font-size: 0.8rem; font-weight: 800; color: var(--neon);
-            text-transform: uppercase; letter-spacing: 1px;
-            margin-bottom: 15px; border-left: 3px solid var(--neon); padding-left: 10px;
-        }
-
-        /* المربعات الرقمية بدلاً من الدوائر */
-        .tiles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px; }
+        /* مربعات الأرقام (بدون انقطاع في الحركة) */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
         
-        .tile {
-            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 10px; padding: 10px; text-align: center;
+        .stat-box {
+            background: rgba(255,255,255,0.02);
+            padding: 8px; border-radius: 8px; text-align: center;
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
-        .tile-val { font-size: 1.6rem; font-weight: 900; display: block; transition: 0.5s; }
-        .tile-label { font-size: 0.6rem; color: #8492a6; font-weight: bold; margin-top: 4px; display: block;}
-        .tile-bm { font-size: 0.55rem; color: #475569; display: block; margin-top: 2px;}
+        .val-num {
+            font-size: 1.6rem; font-weight: 800; display: block;
+            transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); /* حركة سلسة جداً */
+        }
+        .label-txt { font-size: 0.6rem; color: #8b949e; text-transform: uppercase; margin-top: 4px; display: block; }
+        .bm-txt { font-size: 0.55rem; color: #484f58; display: block; }
 
-        .safe { color: var(--neon); text-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }
-        .warn { color: var(--danger); text-shadow: 0 0 10px rgba(255, 49, 49, 0.3); }
+        /* القسم السفلي: بار نحيف + دائرة الأمان */
+        .bottom-section {
+            display: grid;
+            grid-template-columns: 2.5fr 1fr;
+            gap: 12px;
+            height: 200px;
+        }
 
-        /* Music Visualizer Chart */
         .visualizer-container {
-            margin-top: 15px; background: var(--card); border-radius: 16px;
-            padding: 15px; height: 220px; border: 1px solid var(--border);
+            padding: 15px; display: flex; align-items: center;
         }
+
+        .safety-circle-box {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        .circle-svg { width: 130px; height: 130px; transform: rotate(-90deg); }
+        .circle-bg { fill: none; stroke: #161b22; stroke-width: 10; }
+        .circle-progress {
+            fill: none; stroke: var(--neon-blue); stroke-width: 10;
+            stroke-linecap: round; transition: stroke-dashoffset 1.5s ease;
+        }
+        .circle-text {
+            position: absolute; font-size: 1.8rem; font-weight: 900; color: var(--neon-blue);
+        }
+
+        .safe { color: var(--neon-blue); }
+        .warn { color: var(--danger); }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div>
-            <h2 style="margin:0; font-size:1.1rem; letter-spacing:1px;">ICU RIYADH <span style="color:var(--neon)">| CLINICAL PERFORMANCE</span></h2>
-        </div>
-        <div style="background:var(--neon); color:#000; padding:5px 20px; border-radius:8px; font-weight:900;" id="qText">Q-DATA</div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:0 10px;">
+        <h2 style="margin:0; font-size:1rem; letter-spacing:2px;">ICU UNIT <span style="color:var(--neon-blue)">PERFORMANCE MONITOR</span></h2>
+        <div id="qDisplay" style="background:var(--neon-blue); color:#000; padding:4px 15px; border-radius:6px; font-weight:900; font-size:0.9rem;">LOADING...</div>
     </div>
 
-    <div class="dashboard-grid" id="mainGrid"></div>
+    <div class="main-layout" id="gridContainer"></div>
 
-    <div class="visualizer-container">
-        <canvas id="musicChart"></canvas>
+    <div class="bottom-section">
+        <div class="glass-panel visualizer-container">
+            <canvas id="barChart"></canvas>
+        </div>
+        <div class="glass-panel safety-circle-box">
+            <div style="position:relative; display:flex; align-items:center; justify-content:center;">
+                <svg class="circle-svg">
+                    <circle class="circle-bg" cx="65" cy="65" r="55"></circle>
+                    <circle id="progCircle" class="circle-progress" cx="65" cy="65" r="55" stroke-dasharray="345.5" stroke-dashoffset="345.5"></circle>
+                </svg>
+                <div class="circle-text" id="safetyVal">0%</div>
+            </div>
+            <div style="font-size:0.7rem; font-weight:bold; color:#8b949e; margin-top:5px;">UNIT SAFETY INDEX</div>
+        </div>
     </div>
 
     <script>
         const clinicalData = [
             {
-                q: "4Q 2023",
+                q: "4Q 2023", safety: 88,
                 groups: [
-                    { title: "Falls Analysis", size: "normal", items: [["Total", 0, 0.04], ["Injury", 0, 0.03]] },
-                    { title: "Pressure Injury (HAPI)", size: "normal", items: [["Stage 2+", 7.3, 26.6], ["Unit Acq", 0, 0]] },
-                    { title: "Device Infections", size: "large", items: [["CLABSI", 1.38, 1.3], ["CAUTI", 0, 0.46], ["VAE", 1.57, 1.06], ["VAP", 0, 0]] },
-                    { title: "Microbiology", size: "normal", items: [["MDRO", 0, 0], ["C-Diff", 0, 0]] },
-                    { title: "Nursing Workforce", size: "large", items: [["BSN %", 67.2, 83.5], ["Turnover", 5.21, 1.6], ["RN Hours", 13.0, 8.0], ["CNA Hours", 1.1, 1.2]] },
-                    { title: "Patient Restraints", size: "normal", items: [["Physical", 23.3, 5.08]] },
-                    { title: "Safety Summary", size: "normal", items: [["Unit Safety", 88, 75]] }
+                    { title: "Falls Analysis", items: [["Total", 0, 0.04], ["Injury", 0, 0.03]] },
+                    { title: "Pressure Injury", items: [["HAPI %", 7.3, 26.6]] },
+                    { title: "Infections", items: [["CLABSI", 1.38, 1.3], ["CAUTI", 0, 0.46], ["VAE", 1.57, 1.06]] },
+                    { title: "Nursing Staff", items: [["BSN %", 67.2, 83.5], ["Turnover", 5.21, 1.6]] }
                 ]
             },
             {
-                q: "1Q 2024",
+                q: "1Q 2024", safety: 92,
                 groups: [
-                    { title: "Falls Analysis", size: "normal", items: [["Total", 0.24, 0.09], ["Injury", 0.1, 0.04]] },
-                    { title: "Pressure Injury (HAPI)", size: "normal", items: [["Stage 2+", 6.45, 7.7], ["Unit Acq", 0, 0]] },
-                    { title: "Device Infections", size: "large", items: [["CLABSI", 1.28, 2.67], ["CAUTI", 0.7, 0.99], ["VAE", 2.17, 2.42], ["VAP", 0.2, 0]] },
-                    { title: "Microbiology", size: "normal", items: [["MDRO", 0.21, 0], ["C-Diff", 0.15, 0]] },
-                    { title: "Nursing Workforce", size: "large", items: [["BSN %", 83.0, 70.3], ["Turnover", 4.84, 4.49], ["RN Hours", 20.1, 19.1], ["CNA Hours", 1.5, 1.3]] },
-                    { title: "Patient Restraints", size: "normal", items: [["Physical", 6.45, 6.47]] },
-                    { title: "Safety Summary", size: "normal", items: [["Unit Safety", 92, 75]] }
+                    { title: "Falls Analysis", items: [["Total", 0.24, 0.09], ["Injury", 0.1, 0.04]] },
+                    { title: "Pressure Injury", items: [["HAPI %", 6.45, 7.7]] },
+                    { title: "Infections", items: [["CLABSI", 1.28, 2.67], ["CAUTI", 0.7, 0.99], ["VAE", 2.17, 2.42]] },
+                    { title: "Nursing Staff", items: [["BSN %", 83.0, 70.3], ["Turnover", 4.84, 4.49]] }
                 ]
             }
         ];
 
         let step = 0;
-        let mChart;
+        let chart;
 
         function update() {
             const data = clinicalData[step];
-            document.getElementById('qText').innerText = data.q;
-            const grid = document.getElementById('mainGrid');
+            document.getElementById('qDisplay').innerText = data.q;
+            
+            // تحديث المربعات
+            const grid = document.getElementById('gridContainer');
             grid.innerHTML = '';
-
             data.groups.forEach(g => {
-                let tiles = g.items.map(i => {
-                    const isSafe = (i[0].includes("%") || i[0].includes("Hours")) ? (i[1] >= i[2]) : (i[1] <= i[2]);
+                let statsHtml = g.items.map(i => {
+                    const isSafe = (i[0].includes("%")) ? (i[1] >= i[2]) : (i[1] <= i[2]);
                     return `
-                        <div class="tile">
-                            <span class="tile-val ${isSafe?'safe':'warn'}">${i[1]}</span>
-                            <span class="tile-label">${i[0]}</span>
-                            <span class="tile-bm">BM: ${i[2]}</span>
+                        <div class="stat-box">
+                            <span class="val-num ${isSafe?'safe':'warn'}">${i[1]}</span>
+                            <span class="label-txt">${i[0]}</span>
+                            <span class="bm-txt">Target: ${i[2]}</span>
                         </div>`;
                 }).join('');
-
-                grid.innerHTML += `
-                    <div class="container ${g.size}">
-                        <div class="title">${g.title}</div>
-                        <div class="tiles-grid">${tiles}</div>
-                    </div>`;
+                grid.innerHTML += `<div class="glass-panel" style="padding:15px;"><div class="category-title">${g.title}</div><div class="stats-grid">${statsHtml}</div></div>`;
             });
 
-            // تحديث أعمدة الموسيقى (Visualizer)
-            const chartData = data.groups.map(g => g.items[0][1]);
-            if(!mChart) {
-                const ctx = document.getElementById('musicChart').getContext('2d');
-                mChart = new Chart(ctx, {
+            // تحديث دائرة الأمان
+            const offset = 345.5 - (345.5 * data.safety / 100);
+            document.getElementById('progCircle').style.strokeDashoffset = offset;
+            document.getElementById('safetyVal').innerText = data.safety + "%";
+
+            // تحديث البار (Visualizer) - نحيف وحديث
+            const barVals = data.groups.map(g => g.items[0][1]);
+            if(!chart) {
+                const ctx = document.getElementById('barChart').getContext('2d');
+                chart = new Chart(ctx, {
                     type: 'bar',
-                    data: {
-                        labels: data.groups.map(g => g.title),
-                        datasets: [{ data: chartData, backgroundColor: '#00f2ff', borderRadius: 5 }]
-                    },
-                    options: {
-                        maintainAspectRatio: false,
+                    data: { labels: data.groups.map(g => g.title), datasets: [{ data: barVals, backgroundColor: '#00d2ff', borderRadius: 20 }] },
+                    options: { 
+                        maintainAspectRatio: false, 
                         plugins: { legend: { display: false } },
-                        animation: { duration: 1500, easing: 'easeInOutElastic' }, // حركة "موسيقية" مطاطية
-                        scales: { y: { display: false }, x: { ticks: { color: '#8492a6', font: { size: 9 } } } }
+                        scales: { x: { grid: { display: false } }, y: { display: false } }
                     }
                 });
             } else {
-                mChart.data.datasets[0].data = chartData;
-                mChart.update();
+                chart.data.datasets[0].data = barVals;
+                chart.update();
             }
 
             step = (step + 1) % clinicalData.length;
         }
 
         update();
-        setInterval(update, 20000);
+        setInterval(update, 15000); // كل 15 ثانية كما طلبت
     </script>
 </body>
 </html>
 """
 
-components.html(dashboard_html, height=950, scrolling=False)
+components.html(dashboard_html, height=800, scrolling=False)
