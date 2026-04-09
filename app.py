@@ -1,139 +1,141 @@
 import streamlit as st
-import streamlit.components.v1 as components
+import plotly.graph_objects as go
+import time
 
-# إعداد الصفحة
-st.set_page_config(
-    page_title="3FGW Dammam Dashboard",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+# 1. إعدادات الصفحة
+st.set_page_config(page_title="ICU Dashboard", layout="wide", initial_sidebar_state="collapsed")
 
-dashboard_html = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+# 2. CSS المعتمد - حدود قوية وتوهج احترافي
+st.markdown("""
     <style>
-        :root {
-            --bg: #020617;
-            --card-bg: rgba(15, 23, 42, 0.8);
-            --neon-blue: #22d3ee;
-            --neon-red: #f43f5e;
-            --border-clr: rgba(255, 255, 255, 0.1);
-            --text-main: #f8fafc;
-            --text-dim: #94a3b8;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
-            color: var(--text-main);
-            margin: 0; padding: 25px; overflow: hidden;
-        }
-        .dashboard-container { max-width: 1580px; margin: 0 auto; }
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            background: var(--card-bg); backdrop-filter: blur(20px);
-            padding: 20px 45px; border-radius: 20px; border: 1px solid var(--border-clr);
-            margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .q-badge {
-            background: linear-gradient(135deg, #0891b2, #22d3ee);
-            color: #020617; padding: 10px 35px; border-radius: 12px;
-            font-weight: 900; font-size: 1.4rem; box-shadow: 0 0 20px rgba(34, 211, 238, 0.4);
-        }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
-        .kpi-card {
-            background: var(--card-bg); border-radius: 22px; padding: 20px;
-            text-align: center; border: 2px solid var(--border-clr);
-            transition: all 0.4s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        .kpi-title { font-size: 0.85rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 10px; }
-        .val-large { font-size: 3rem; font-weight: 900; line-height: 1; margin-bottom: 8px; }
-        .safe { color: var(--neon-blue); text-shadow: 0 0 15px rgba(34, 211, 238, 0.4); }
-        .alert { color: var(--neon-red); text-shadow: 0 0 15px rgba(244, 63, 94, 0.4); }
-        .bm-container { font-size: 0.75rem; color: #475569; background: rgba(255, 255, 255, 0.05); padding: 4px 12px; border-radius: 6px; }
-        .bottom-section { display: grid; grid-template-columns: 2fr 1.1fr; gap: 25px; height: 350px; }
-        .glass-panel { background: var(--card-bg); border-radius: 25px; padding: 25px; border: 1px solid var(--border-clr); display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .score-circle { width: 180px; height: 180px; border-radius: 50%; border: 10px solid #1e293b; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 1s ease; }
-        .score-num { font-size: 3.5rem; font-weight: 900; }
+    [data-testid="stAppViewContainer"] { background-color: #000000; color: #ffffff; }
+    
+    /* تعزيز حدود المربعات */
+    .kpi-card {
+        position: relative; background-color: #0a0a0a; border-radius: 20px;
+        overflow: hidden; display: flex; flex-direction: column; justify-content: center;
+        text-align: center; height: 260px; margin-bottom: 20px;
+        border: 2px solid #1a1a1a; 
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.2); 
+    }
+    .kpi-card::before, .circle-container::before {
+        content: ''; position: absolute; width: 250%; height: 250%;
+        background: conic-gradient(#00d4ff, #001a1a, #00d4ff);
+        animation: rotate-wave 4s linear infinite; top: 50%; left: 50%;
+    }
+    .kpi-card::after, .circle-container::after {
+        content: ''; position: absolute; background-color: #0a0a0a; inset: 5px; border-radius: 16px;
+    }
+    
+    /* تعزيز حدود الدوائر */
+    .circle-container {
+        position: relative; width: 280px; height: 280px; border-radius: 50%;
+        margin: auto; overflow: hidden; display: flex; justify-content: center; align-items: center; text-align: center;
+        border: 2px solid #1a1a1a;
+        box-shadow: 0 0 25px rgba(0, 212, 255, 0.25);
+    }
+    .circle-container::after { border-radius: 50%; inset: 10px; }
+    
+    @keyframes rotate-wave { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+    
+    .content-box { position: relative; z-index: 10; width: 100%; padding: 10px; }
+    .label-full { color: #aaaaaa; font-size: 22px; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
+    .val-full { color: #00d4ff; font-size: 50px; font-weight: 900; line-height: 1; }
+    .bm-full { color: #444444; font-size: 14px; font-weight: bold; margin-top: 10px; text-transform: uppercase; }
+
+    /* الجزء السفلي - المربعات الذهبية */
+    .census-box-mini { 
+        background: #0a0a0a; border: 2px solid #FFD700; border-radius: 12px; 
+        padding: 10px 20px; text-align: left; margin-bottom: 15px;
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
+    }
+    .census-num-mini { color: #FFD700; font-size: 38px; font-weight: 900; }
+    .side-header { color: #00d4ff; font-size: 26px; font-weight: 900; margin-bottom: 15px; text-transform: uppercase; }
+    .gauge-label-bottom { color: #ffffff; font-size: 14px; font-weight: 900; text-transform: uppercase; margin-top: -20px; text-align: center; }
     </style>
-</head>
-<body>
-    <div class="dashboard-container">
-        <div class="header">
-            <div>
-                <h1 style="margin:0; font-size:1.6rem;">UNIT: <span style="color:var(--neon-blue)">3FGW-DAMMAM</span></h1>
-                <p style="margin:5px 0 0 0; color:var(--text-dim);">QUALITY & SAFETY PERFORMANCE TRACKER</p>
-            </div>
-            <div class="q-badge" id="qLabel">1Q 2024</div>
-        </div>
-        <div class="grid" id="kpiGrid"></div>
-        <div class="bottom-section">
-            <div class="glass-panel"><canvas id="barChartCanvas"></canvas></div>
-            <div class="glass-panel">
-                <div class="score-circle" id="circleBorder"><div class="score-num" id="scoreVal">0%</div></div>
-                <div style="margin-top:15px; font-weight:700; color:var(--text-dim);">OVERALL QUALITY INDEX</div>
-            </div>
-        </div>
-    </div>
-    <script>
-        // البيانات المستخرجة بدقة من ملف "3FGW-Dammam"
-        const clinicalData = [
-            { q: "1Q 2024", v: [0.42, 0.00, 0.00, 0.00, 6.47, 4.87, 0.11, 0.00], b: [0.35, 0.12, 0.00, 0.00, 7.38, 7.38, 0.00, 0.00] },
-            { q: "2Q 2024", v: [0.00, 0.00, 2.01, 0.00, 7.15, 6.43, 2.00, 0.00], b: [0.64, 0.00, 1.30, 0.90, 6.80, 7.38, 0.35, 0.02] },
-            { q: "3Q 2024", v: [1.12, 0.17, 0.00, 3.33, 4.79, 4.21, 9.00, 0.01], b: [0.45, 0.00, 1.15, 0.75, 7.10, 7.10, 0.37, 0.00] },
-            { q: "4Q 2024", v: [2.09, 0.00, 0.00, 7.15, 7.02, 7.17, 0.00, 0.01], b: [0.35, 0.08, 1.10, 0.80, 7.00, 7.00, 0.37, 0.02] },
-            { q: "3Q 2025", v: [0.10, 0.00, 0.00, 7.40, 6.89, 7.40, 4.00, 0.01], b: [0.43, 0.10, 1.20, 0.85, 7.15, 7.15, 0.40, 0.01] }
-        ];
+    """, unsafe_allow_html=True)
 
-        const kpis = ["Total Falls", "Injury Falls", "CLABSI", "CAUTI", "RN Hours", "Nursing Hours", "Assault Rate", "Injury Assault"];
-        let step = 0; let mainChart;
+# 3. إدارة حركة البيانات (تغيير كل 15 ثانية)
+if 'step' not in st.session_state: st.session_state.step = 0
 
-        function update() {
-            const current = clinicalData[step];
-            document.getElementById('qLabel').innerText = current.q;
-            const grid = document.getElementById('kpiGrid');
-            grid.innerHTML = '';
-            let met = 0;
+# داتا العلوي (Quarters من الـ PDF)
+pdf_quarters = [
+    {"q": "3Q 2024", "sq": [0.36, 0.36, 6.90, 2.63, 1.02, 0.00], "sq_bm": [0.28, 0.05, 4.60, 1.20, 0.40, 1.89],
+     "cir": [20.69, 0.00, 4.69, 12.54, 68.25, 0.00], "cir_bm": [6.32, 1.89, 4.51, 19.20, 83.36, 0.25]},
+    {"q": "1Q 2025", "sq": [1.59, 0.80, 4.17, 3.02, 0.00, 6.69], "sq_bm": [0.12, 0.03, 4.96, 1.26, 0.43, 1.91],
+     "cir": [12.50, 6.69, 1.43, 12.87, 70.00, 0.00], "cir_bm": [8.23, 1.91, 3.97, 19.15, 83.78, 0.26]}
+]
 
-            current.v.forEach((val, i) => {
-                // المؤشرات (4 و 5) هي ساعات التمريض: الأعلى أفضل. الباقي: الأقل أفضل.
-                const isHigherBetter = (i === 4 || i === 5);
-                const isBad = isHigherBetter ? (val < current.b[i]) : (val > current.b[i]);
-                if(!isBad) met++;
-                
-                grid.innerHTML += `
-                    <div class="kpi-card">
-                        <div class="kpi-title">${kpis[i]}</div>
-                        <div class="val-large ${isBad ? 'alert' : 'safe'}">${val}</div>
-                        <div class="bm-container">BM: ${current.b[i]}</div>
-                    </div>`;
-            });
+# داتا السفلي (Weeks من صور الديفيس) - تتغير مع الـ Step
+device_weeks = [
+    {"w": "Week 1", "census": 23, "occ": "78%", "vals": [12, 16, 4, 3.5]},
+    {"w": "Week 2", "census": 28, "occ": "93%", "vals": [11, 15, 6, 4.5]},
+    {"w": "Week 3", "census": 25, "occ": "85%", "vals": [13, 18, 5, 4.2]}
+]
 
-            const score = Math.round((met/8)*100);
-            document.getElementById('scoreVal').innerText = score + "%";
-            const color = score >= 70 ? "#22d3ee" : "#f43f5e";
-            document.getElementById('scoreVal').style.color = color;
-            document.getElementById('circleBorder').style.borderColor = color;
+cur_pdf = pdf_quarters[st.session_state.step % len(pdf_quarters)]
+cur_dev = device_weeks[st.session_state.step % len(device_weeks)]
 
-            if(!mainChart) {
-                const ctx = document.getElementById('barChartCanvas').getContext('2d');
-                mainChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: { labels: kpis, datasets: [{ data: current.v, backgroundColor: '#22d3ee', borderRadius: 5 }] },
-                    options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' } } } }
-                });
-            } else {
-                mainChart.data.datasets[0].data = current.v;
-                mainChart.update();
-            }
-            step = (step + 1) % clinicalData.length;
-        }
-        update(); setInterval(update, 8000);
-    </script>
-</body>
-</html>
-"""
+# --- الجزء العلوي (مربعات ودواير) ---
+st.markdown(f"<h1 style='text-align: center; color: #00d4ff; font-size: 50px; font-weight:900;'>ICU DASHBOARD</h1>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center; color: #FFD700; font-size: 20px; font-weight:bold;'>QUARTERLY PERFORMANCE: {cur_pdf['q']}</p>", unsafe_allow_html=True)
 
-components.html(dashboard_html, height=950, scrolling=False)
+sq_names = ["Falls", "Injury Falls", "HAPI %", "CLABSI", "CAUTI", "VAE Rate"]
+c1 = st.columns(6)
+for i in range(6):
+    v, b = cur_pdf['sq'][i], cur_pdf['sq_bm'][i]
+    color = "#00ffaa" if v <= b else "#ff4b4b"
+    with c1[i]:
+        st.markdown(f'<div class="kpi-card"><div class="content-box"><div class="label-full">{sq_names[i]}</div><div class="val-full" style="color:{color}">{v}</div><div class="bm-full">BENCHMARK: {b}</div></div></div>', unsafe_allow_html=True)
+
+st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
+cir_names = ["Restraints", "VAE Rate", "Turnover", "Nurse Hr", "RN Edu", "C-Diff"]
+c2 = st.columns(6)
+for i in range(6):
+    v, b = cur_pdf['cir'][i], cur_pdf['cir_bm'][i]
+    is_rev = any(x in cir_names[i] for x in ["Hr", "Edu"])
+    color = "#00ffaa" if (v >= b if is_rev else v <= b) else "#ff4b4b"
+    with c2[i]:
+        st.markdown(f'<div class="circle-container"><div class="content-box"><div class="label-full" style="font-size:18px;">{cir_names[i]}</div><div class="val-text" style="color:{color}; font-size:42px;">{v}</div><div class="bm-text">BENCHMARK: {b}</div></div></div>', unsafe_allow_html=True)
+
+st.markdown("<hr style='border-color:#111; margin:40px 0;'>", unsafe_allow_html=True)
+
+# --- الجزء السفلي (Attached Devices - أسبوعي متحرك) ---
+col_left, col_right = st.columns([2.2, 1.8])
+
+with col_left:
+    sub_c1, sub_c2 = st.columns(2)
+    with sub_c1:
+        st.markdown(f'<div class="census-box-mini"><div style="color:#555; font-size:12px; font-weight:bold;">CURRENT CENSUS</div><div class="census-num-mini">{cur_dev["census"]}</div></div>', unsafe_allow_html=True)
+    with sub_c2:
+        st.markdown(f'<div class="census-box-mini" style="border-color:#00d4ff;"><div style="color:#555; font-size:12px; font-weight:bold;">OCCUPANCY RATE</div><div class="census-num-mini" style="color:#00d4ff;">{cur_dev["occ"]}</div></div>', unsafe_allow_html=True)
+    
+    st.markdown(f'<div class="side-header">ATTACHED DEVICES <span style="color:#FFD700; font-size:16px;">({cur_dev["w"]})</span></div>', unsafe_allow_html=True)
+    
+    g_cols = st.columns(4)
+    dev_info = [("Pt with ETT", 36, [10, 18]), ("Pt with Foley", 36, [24, 30]), ("Pt with CVC", 36, [16, 22]), ("Avg Stay", 10, [4, 6])]
+    for i, (name, mx, steps) in enumerate(dev_info):
+        with g_cols[i]:
+            fig = go.Figure(go.Indicator(
+                mode = "gauge+number", value = cur_dev['vals'][i],
+                number = {'font': {'size': 35, 'color': '#fff'}},
+                gauge = {'axis': {'range': [None, mx], 'tickvals': []}, 'bar': {'color': "#222"}, 'bgcolor': "#000",
+                         'steps': [{'range': [0, steps[0]], 'color': "#00ffaa"}, {'range': [steps[0], steps[1]], 'color': "#FFD700"}, {'range': [steps[1], mx], 'color': "#ff4b4b"}]}
+            ))
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(t=10, b=0, l=10, r=10), height=120)
+            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+            st.markdown(f'<div class="gauge-label-bottom">{name}</div>', unsafe_allow_html=True)
+
+with col_right:
+    st.markdown('<div class="side-header" style="margin-left:20px;">PERFORMANCE ANALYTICS</div>', unsafe_allow_html=True)
+    fig_bar = go.Figure()
+    fig_bar.add_trace(go.Bar(x=sq_names, y=cur_pdf['sq'], name="Current", marker_color='#00d4ff', text=cur_pdf['sq'], textposition='outside'))
+    fig_bar.add_trace(go.Bar(x=sq_names, y=cur_pdf['sq_bm'], name="Benchmark", marker_color='#1a1a1a'))
+    fig_bar.update_layout(height=400, barmode='group', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', 
+                          margin=dict(t=20, b=20, l=0, r=0), legend=dict(font=dict(color="#888"), orientation="h", y=1.2))
+    st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
+
+# التحديث التلقائي لكل 15 ثانية (يغير Quarter فوق و Week تحت)
+time.sleep(15)
+st.session_state.step += 1
+st.rerun()
