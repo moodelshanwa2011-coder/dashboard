@@ -1,187 +1,138 @@
 import streamlit as st
-import streamlit.components.v1 as components
+import plotly.graph_objects as go
+import time
 
-# إعداد الصفحة
-st.set_page_config(
-    page_title="3FGW Dammam Performance",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+# 1. إعدادات الصفحة
+st.set_page_config(page_title="ICU Executive Dashboard", layout="wide", initial_sidebar_state="collapsed")
 
-dashboard_html = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+# 2. CSS المطور - حركة الموسيقى في كل العناصر
+st.markdown("""
     <style>
-        :root {
-            --bg: #020617;
-            --card-bg: #0a0a0a;
-            --neon-blue: #22d3ee;
-            --neon-red: #f43f5e;
-            --border-clr: rgba(255, 255, 255, 0.1);
-            --text-main: #f8fafc;
-            --text-dim: #94a3b8;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
-            color: var(--text-main);
-            margin: 0; padding: 25px; overflow: hidden;
-        }
+    [data-testid="stAppViewContainer"] { background-color: #000000; color: #ffffff; }
+    
+    /* القاعدة الأساسية لكل العناصر المتحركة */
+    .music-motion {
+        position: relative; background-color: #0a0a0a; overflow: hidden;
+        border: 2px solid #1a1a1a; display: flex; flex-direction: column; 
+        justify-content: center; text-align: center;
+    }
 
-        .dashboard-container { max-width: 1580px; margin: 0 auto; }
+    /* أنيميشن حركة الموسيقى */
+    .music-motion::before {
+        content: ''; position: absolute; width: 280%; height: 280%;
+        background: conic-gradient(#00d4ff, #001a1a, #00d4ff);
+        animation: rotate-wave 4s linear infinite; top: 50%; left: 50%;
+    }
 
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(20px);
-            padding: 20px 45px; border-radius: 20px; border: 1px solid var(--border-clr);
-            margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
+    /* الغطاء الداخلي لإنشاء تأثير الحدود الرفيعة */
+    .music-motion::after {
+        content: ''; position: absolute; background-color: #0a0a0a; z-index: 1;
+    }
 
-        .q-badge {
-            background: linear-gradient(135deg, #0891b2, #22d3ee);
-            color: #020617; padding: 10px 35px; border-radius: 12px;
-            font-weight: 900; font-size: 1.4rem; box-shadow: 0 0 20px rgba(34, 211, 238, 0.4);
-        }
+    /* تخصيص المربعات العلوية */
+    .kpi-card { height: 260px; border-radius: 20px; margin-bottom: 20px; }
+    .kpi-card::after { inset: 5px; border-radius: 16px; }
 
-        /* المربعات والدوائر مع حركة الموسيقى المتوهجة */
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
+    /* تخصيص الدوائر الستة */
+    .circle-container { width: 220px; height: 220px; border-radius: 50%; margin: auto; }
+    .circle-container::after { inset: 8px; border-radius: 50%; }
 
-        .kpi-card, .score-circle {
-            position: relative; background-color: var(--card-bg); 
-            overflow: hidden; border: 2px solid #1a1a1a;
-            transition: all 0.4s ease;
-        }
+    /* تخصيص المربعات الذهبية السفلية */
+    .census-card { height: 100px; border-radius: 12px; margin-bottom: 15px; border-color: #FFD700 !important; }
+    .census-card::before { background: conic-gradient(#FFD700, #000, #FFD700) !important; }
+    .census-card::after { inset: 4px; border-radius: 10px; }
 
-        .kpi-card { border-radius: 22px; padding: 25px; text-align: center; height: 180px; }
-        
-        .score-circle { 
-            width: 200px; height: 200px; border-radius: 50%; 
-            display: flex; flex-direction: column; align-items: center; 
-            justify-content: center; margin: auto; 
-        }
-
-        /* تأثير "حركة الموسيقى" النيوني */
-        .kpi-card::before, .score-circle::before {
-            content: ''; position: absolute; width: 250%; height: 250%;
-            background: conic-gradient(var(--neon-blue), #001a1a, var(--neon-blue));
-            animation: rotate-wave 4s linear infinite; top: 50%; left: 50%;
-        }
-
-        .kpi-card::after, .score-circle::after {
-            content: ''; position: absolute; background-color: var(--card-bg); 
-            inset: 4px; border-radius: 18px; z-index: 1;
-        }
-        .score-circle::after { border-radius: 50%; inset: 8px; }
-
-        @keyframes rotate-wave { 
-            0% { transform: translate(-50%, -50%) rotate(0deg); } 
-            100% { transform: translate(-50%, -50%) rotate(360deg); } 
-        }
-
-        /* ضمان ظهور المحتوى فوق الحركة */
-        .content-z { position: relative; z-index: 10; }
-
-        .kpi-title { font-size: 0.85rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 10px; }
-        .val-large { font-size: 3rem; font-weight: 900; line-height: 1; margin-bottom: 8px; }
-        .safe { color: var(--neon-blue); text-shadow: 0 0 15px rgba(34, 211, 238, 0.4); }
-        .alert { color: var(--neon-red); text-shadow: 0 0 15px rgba(244, 63, 94, 0.4); }
-        .bm-container { font-size: 0.75rem; color: #475569; background: rgba(255, 255, 255, 0.05); padding: 4px 12px; border-radius: 6px; display: inline-block; }
-
-        .bottom-section { display: grid; grid-template-columns: 2fr 1.1fr; gap: 25px; height: 380px; }
-        .glass-panel { background: rgba(15, 23, 42, 0.8); border-radius: 25px; padding: 30px; border: 1px solid var(--border-clr); display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .score-num { font-size: 4rem; font-weight: 900; }
+    @keyframes rotate-wave { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+    
+    .content-box { position: relative; z-index: 10; width: 100%; padding: 10px; }
+    .label-full { color: #aaaaaa; font-size: 18px; font-weight: 900; text-transform: uppercase; }
+    .val-full { color: #00d4ff; font-size: 45px; font-weight: 900; line-height: 1; }
+    .bm-full { color: #444444; font-size: 12px; font-weight: bold; margin-top: 5px; }
+    
+    .census-num-mini { color: #FFD700; font-size: 32px; font-weight: 900; }
+    .side-header { color: #00d4ff; font-size: 24px; font-weight: 900; margin-bottom: 15px; }
+    .gauge-label-bottom { color: #ffffff; font-size: 13px; font-weight: 900; text-transform: uppercase; text-align: center; margin-top: -15px; }
     </style>
-</head>
-<body>
-    <div class="dashboard-container">
-        <div class="header">
-            <div>
-                <h1 style="margin:0; font-size:1.8rem;">UNIT: <span style="color:var(--neon-blue)">3FGW-DAMMAM</span></h1>
-                <p style="margin:5px 0 0 0; color:var(--text-dim); font-weight:600;">QUALITY & SAFETY PERFORMANCE</p>
-            </div>
-            <div class="q-badge" id="qLabel">1Q 2024</div>
-        </div>
+    """, unsafe_allow_html=True)
 
-        <div class="grid" id="kpiGrid"></div>
+# 3. إدارة حركة البيانات
+if 'step' not in st.session_state: st.session_state.step = 0
 
-        <div class="bottom-section">
-            <div class="glass-panel"><canvas id="barChartCanvas"></canvas></div>
-            <div class="glass-panel">
-                <div class="score-circle">
-                    <div class="score-num content-z" id="scoreVal">0%</div>
-                </div>
-                <div class="content-z" style="margin-top:20px; font-weight:700; color:var(--text-dim);">OVERALL QUALITY SCORE</div>
-            </div>
-        </div>
-    </div>
+pdf_quarters = [
+    {"q": "3Q 2024", "sq": [0.36, 0.36, 6.90, 2.63, 1.02, 0.00], "sq_bm": [0.28, 0.05, 4.60, 1.20, 0.40, 1.89],
+     "cir": [20.69, 0.00, 4.69, 12.54, 68.25, 0.00], "cir_bm": [6.32, 1.89, 4.51, 19.20, 83.36, 0.25]},
+    {"q": "1Q 2025", "sq": [1.59, 0.80, 4.17, 3.02, 0.00, 6.69], "sq_bm": [0.12, 0.03, 4.96, 1.26, 0.43, 1.91],
+     "cir": [12.50, 6.69, 1.43, 12.87, 70.00, 0.00], "cir_bm": [8.23, 1.91, 3.97, 19.15, 83.78, 0.26]}
+]
 
-    <script>
-        // داتا فرع الدمام الصحيحة
-        const clinicalData = [
-            { q: "1Q 2024", v: [0.42, 0.00, 0.00, 0.00, 6.47, 4.87, 0.00, 0.00], b: [0.35, 0.12, 1.25, 0.88, 7.38, 7.38, 0.11, 0.04] },
-            { q: "2Q 2024", v: [0.00, 0.00, 2.01, 0.00, 7.15, 6.43, 2.00, 0.00], b: [0.64, 0.00, 1.30, 0.90, 6.80, 7.38, 0.35, 0.02] },
-            { q: "3Q 2024", v: [1.12, 0.17, 0.00, 3.33, 4.79, 4.21, 9.00, 0.01], b: [0.45, 0.00, 1.15, 0.75, 7.10, 7.10, 0.37, 0.00] },
-            { q: "4Q 2024", v: [2.09, 0.00, 0.00, 7.15, 7.02, 7.17, 0.00, 0.01], b: [0.35, 0.08, 1.10, 0.80, 7.00, 7.00, 0.37, 0.02] }
-        ];
+device_weeks = [
+    {"w": "Week 1", "census": 23, "occ": "78%", "vals": [12, 16, 4, 3.5]},
+    {"w": "Week 2", "census": 28, "occ": "93%", "vals": [11, 15, 6, 4.5]}
+]
 
-        const kpis = ["Falls", "Injury Falls", "CLABSI", "CAUTI", "RN Hours", "Nursing Hours", "Assault", "Injury Assault"];
-        let step = 0; let mainChart;
+cur_pdf = pdf_quarters[st.session_state.step % len(pdf_quarters)]
+cur_dev = device_weeks[st.session_state.step % len(device_weeks)]
 
-        function update() {
-            const current = clinicalData[step];
-            document.getElementById('qLabel').innerText = current.q;
-            const grid = document.getElementById('kpiGrid');
-            grid.innerHTML = '';
-            let met = 0;
+# الهيدر
+st.markdown(f"<h1 style='text-align: center; color: #00d4ff; font-size: 45px; font-weight:900; margin:0;'>ICU PERFORMANCE TRACKER</h1>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center; color: #FFD700; font-size: 18px; margin-bottom:20px;'>REPORTING PERIOD: {cur_pdf['q']}</p>", unsafe_allow_html=True)
 
-            current.v.forEach((val, i) => {
-                const isPositive = (i === 4 || i === 5); // ساعات التمريض الأعلى أفضل
-                const isBad = isPositive ? (val < current.b[i]) : (val > current.b[i]);
-                if(!isBad) met++;
-                
-                grid.innerHTML += `
-                    <div class="kpi-card">
-                        <div class="content-z">
-                            <div class="kpi-title">${kpis[i]}</div>
-                            <div class="val-large ${isBad ? 'alert' : 'safe'}">${val}</div>
-                            <div class="bm-container">Benchmark: ${current.b[i]}</div>
-                        </div>
-                    </div>`;
-            });
+# المربعات العلوية (6)
+sq_names = ["Falls", "Injury Falls", "HAPI %", "CLABSI", "CAUTI", "VAE Rate"]
+c1 = st.columns(6)
+for i in range(6):
+    v, b = cur_pdf['sq'][i], cur_pdf['sq_bm'][i]
+    color = "#00ffaa" if v <= b else "#ff4b4b"
+    with c1[i]:
+        st.markdown(f'''<div class="music-motion kpi-card"><div class="content-box"><div class="label-full">{sq_names[i]}</div><div class="val-full" style="color:{color}">{v}</div><div class="bm-full">BM: {b}</div></div></div>''', unsafe_allow_html=True)
 
-            const score = Math.round((met/8)*100);
-            const scoreEl = document.getElementById('scoreVal');
-            scoreEl.innerText = score + "%";
-            scoreEl.style.color = score >= 75 ? "#22d3ee" : "#f43f5e";
+# الدوائر الوسطى (6)
+cir_names = ["Restraints", "VAE Rate", "Turnover", "Nurse Hr", "RN Edu", "C-Diff"]
+c2 = st.columns(6)
+for i in range(6):
+    v, b = cur_pdf['cir'][i], cur_pdf['cir_bm'][i]
+    is_rev = any(x in cir_names[i] for x in ["Hr", "Edu"])
+    color = "#00ffaa" if (v >= b if is_rev else v <= b) else "#ff4b4b"
+    with c2[i]:
+        st.markdown(f'''<div class="music-motion circle-container"><div class="content-box"><div class="label-full" style="font-size:14px;">{cir_names[i]}</div><div style="color:{color}; font-size:38px; font-weight:900;">{v}</div><div class="bm-full" style="font-size:10px;">BM: {b}</div></div></div>''', unsafe_allow_html=True)
 
-            if(!mainChart) {
-                const ctx = document.getElementById('barChartCanvas').getContext('2d');
-                mainChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: { 
-                        labels: kpis, 
-                        datasets: [{ data: current.v, backgroundColor: '#22d3ee', borderRadius: 6 }] 
-                    },
-                    options: { 
-                        maintainAspectRatio: false, 
-                        plugins: { legend: { display: false } },
-                        scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' } } }
-                    }
-                });
-            } else {
-                mainChart.data.datasets[0].data = current.v;
-                mainChart.update();
-            }
-            step = (step + 1) % clinicalData.length;
-        }
-        update(); setInterval(update, 8000);
-    </script>
-</body>
-</html>
-"""
+st.markdown("<hr style='border-color:#222; margin:30px 0;'>", unsafe_allow_html=True)
 
-components.html(dashboard_html, height=1000, scrolling=False)
+# الجزء السفلي
+col_left, col_right = st.columns([2.2, 1.8])
+
+with col_left:
+    sub_c1, sub_c2 = st.columns(2)
+    with sub_c1:
+        st.markdown(f'''<div class="music-motion census-card"><div class="content-box"><div style="color:#888; font-size:12px;">CENSUS</div><div class="census-num-mini">{cur_dev["census"]}</div></div></div>''', unsafe_allow_html=True)
+    with sub_c2:
+        st.markdown(f'''<div class="music-motion census-card" style="border-color:#00d4ff !important;"><div class="content-box"><div style="color:#888; font-size:12px;">OCCUPANCY</div><div class="census-num-mini" style="color:#00d4ff;">{cur_dev["occ"]}</div></div></div>''', unsafe_allow_html=True)
+    
+    st.markdown(f'<div class="side-header">ATTACHED DEVICES <span style="color:#FFD700; font-size:14px;">({cur_dev["w"]})</span></div>', unsafe_allow_html=True)
+    
+    g_cols = st.columns(4)
+    dev_info = [("ETT", 36, [10, 18]), ("Foley", 36, [24, 30]), ("CVC", 36, [16, 22]), ("LOS", 10, [4, 6])]
+    for i, (name, mx, steps) in enumerate(dev_info):
+        with g_cols[i]:
+            fig = go.Figure(go.Indicator(
+                mode = "gauge+number", value = cur_dev['vals'][i],
+                number = {'font': {'size': 25, 'color': '#fff'}},
+                gauge = {'axis': {'range': [None, mx], 'tickvals': []}, 'bar': {'color': "#00d4ff"}, 'bgcolor': "#000",
+                         'steps': [{'range': [0, steps[0]], 'color': "#00ffaa"}, {'range': [steps[0], steps[1]], 'color': "#FFD700"}, {'range': [steps[1], mx], 'color': "#ff4b4b"}]}
+            ))
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(t=0, b=0, l=10, r=10), height=100)
+            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+            st.markdown(f'<div class="gauge-label-bottom">{name}</div>', unsafe_allow_html=True)
+
+with col_right:
+    st.markdown('<div class="side-header">QUARTERLY ANALYTICS</div>', unsafe_allow_html=True)
+    fig_bar = go.Figure()
+    fig_bar.add_trace(go.Bar(x=sq_names, y=cur_pdf['sq'], name="Current", marker_color='#00d4ff'))
+    fig_bar.add_trace(go.Bar(x=sq_names, y=cur_pdf['sq_bm'], name="Benchmark", marker_color='#333'))
+    fig_bar.update_layout(height=350, barmode='group', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', 
+                          margin=dict(t=10, b=10, l=0, r=0), legend=dict(font=dict(color="#888"), orientation="h", y=1.1))
+    st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
+
+time.sleep(15)
+st.session_state.step += 1
+st.rerun()
