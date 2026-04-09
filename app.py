@@ -3,7 +3,7 @@ import streamlit.components.v1 as components
 
 # إعداد الصفحة
 st.set_page_config(
-    page_title="3FGW Dammam | Dynamic Dashboard",
+    page_title="3FGW Dammam Performance",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -47,7 +47,7 @@ dashboard_html = """
             font-weight: 900; font-size: 1.4rem; box-shadow: 0 0 20px rgba(34, 211, 238, 0.4);
         }
 
-        /* المربعات والدوائر مع حركة الموسيقى */
+        /* المربعات والدوائر مع حركة الموسيقى المتوهجة */
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
 
         .kpi-card, .score-circle {
@@ -57,9 +57,14 @@ dashboard_html = """
         }
 
         .kpi-card { border-radius: 22px; padding: 25px; text-align: center; height: 180px; }
-        .score-circle { width: 200px; height: 200px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: auto; }
+        
+        .score-circle { 
+            width: 200px; height: 200px; border-radius: 50%; 
+            display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; margin: auto; 
+        }
 
-        /* الأنيميشن (حركة الموسيقى) */
+        /* تأثير "حركة الموسيقى" النيوني */
         .kpi-card::before, .score-circle::before {
             content: ''; position: absolute; width: 250%; height: 250%;
             background: conic-gradient(var(--neon-blue), #001a1a, var(--neon-blue));
@@ -77,6 +82,7 @@ dashboard_html = """
             100% { transform: translate(-50%, -50%) rotate(360deg); } 
         }
 
+        /* ضمان ظهور المحتوى فوق الحركة */
         .content-z { position: relative; z-index: 10; }
 
         .kpi-title { font-size: 0.85rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 10px; }
@@ -87,7 +93,7 @@ dashboard_html = """
 
         .bottom-section { display: grid; grid-template-columns: 2fr 1.1fr; gap: 25px; height: 380px; }
         .glass-panel { background: rgba(15, 23, 42, 0.8); border-radius: 25px; padding: 30px; border: 1px solid var(--border-clr); display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .score-num { font-size: 4rem; font-weight: 900; z-index: 10; position: relative; }
+        .score-num { font-size: 4rem; font-weight: 900; }
     </style>
 </head>
 <body>
@@ -95,7 +101,7 @@ dashboard_html = """
         <div class="header">
             <div>
                 <h1 style="margin:0; font-size:1.8rem;">UNIT: <span style="color:var(--neon-blue)">3FGW-DAMMAM</span></h1>
-                <p style="margin:5px 0 0 0; color:var(--text-dim); font-weight:600;">QUALITY PERFORMANCE TRACKER</p>
+                <p style="margin:5px 0 0 0; color:var(--text-dim); font-weight:600;">QUALITY & SAFETY PERFORMANCE</p>
             </div>
             <div class="q-badge" id="qLabel">1Q 2024</div>
         </div>
@@ -105,15 +111,16 @@ dashboard_html = """
         <div class="bottom-section">
             <div class="glass-panel"><canvas id="barChartCanvas"></canvas></div>
             <div class="glass-panel">
-                <div class="score-circle" id="circleBorder">
+                <div class="score-circle">
                     <div class="score-num content-z" id="scoreVal">0%</div>
                 </div>
-                <div style="margin-top:20px; font-weight:700; color:var(--text-dim); z-index:10;">OVERALL QUALITY SCORE</div>
+                <div class="content-z" style="margin-top:20px; font-weight:700; color:var(--text-dim);">OVERALL QUALITY SCORE</div>
             </div>
         </div>
     </div>
 
     <script>
+        // داتا فرع الدمام الصحيحة
         const clinicalData = [
             { q: "1Q 2024", v: [0.42, 0.00, 0.00, 0.00, 6.47, 4.87, 0.00, 0.00], b: [0.35, 0.12, 1.25, 0.88, 7.38, 7.38, 0.11, 0.04] },
             { q: "2Q 2024", v: [0.00, 0.00, 2.01, 0.00, 7.15, 6.43, 2.00, 0.00], b: [0.64, 0.00, 1.30, 0.90, 6.80, 7.38, 0.35, 0.02] },
@@ -132,7 +139,7 @@ dashboard_html = """
             let met = 0;
 
             current.v.forEach((val, i) => {
-                const isPositive = (i === 4 || i === 5);
+                const isPositive = (i === 4 || i === 5); // ساعات التمريض الأعلى أفضل
                 const isBad = isPositive ? (val < current.b[i]) : (val > current.b[i]);
                 if(!isBad) met++;
                 
@@ -148,17 +155,22 @@ dashboard_html = """
 
             const score = Math.round((met/8)*100);
             const scoreEl = document.getElementById('scoreVal');
-            const ring = document.getElementById('circleBorder');
             scoreEl.innerText = score + "%";
-            const color = score >= 75 ? "#22d3ee" : "#f43f5e";
-            scoreEl.style.color = color;
+            scoreEl.style.color = score >= 75 ? "#22d3ee" : "#f43f5e";
 
             if(!mainChart) {
                 const ctx = document.getElementById('barChartCanvas').getContext('2d');
                 mainChart = new Chart(ctx, {
                     type: 'bar',
-                    data: { labels: kpis, datasets: [{ data: current.v, backgroundColor: '#22d3ee', borderRadius: 6 }] },
-                    options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' } } } }
+                    data: { 
+                        labels: kpis, 
+                        datasets: [{ data: current.v, backgroundColor: '#22d3ee', borderRadius: 6 }] 
+                    },
+                    options: { 
+                        maintainAspectRatio: false, 
+                        plugins: { legend: { display: false } },
+                        scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' } } }
+                    }
                 });
             } else {
                 mainChart.data.datasets[0].data = current.v;
