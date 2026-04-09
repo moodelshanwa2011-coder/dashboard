@@ -1,16 +1,14 @@
 import streamlit as st
 import plotly.graph_objects as go
-import time
 
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="ICU Dashboard", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. CSS المعتمد - مع الأعمدة الموسيقية
+# 2. CSS المعتمد - بدون أي لعب في التصميم مع إضافة الأنيميشن الهادئ
 st.markdown("""
     <style>
     [data-testid="stAppViewContainer"] { background-color: #000000; color: #ffffff; }
     
-    /* الأعمدة الموسيقية المتحركة */
     .visualizer {
         position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
         display: flex; gap: 3px; height: 30px; align-items: flex-end; z-index: 5; opacity: 0.4;
@@ -23,12 +21,14 @@ st.markdown("""
     .v-bar:nth-child(5) { animation-delay: 0.1s; height: 60%; }
     @keyframes bounce { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.8); } }
 
-    .kpi-card {
+    .kpi-card, .circle-container {
         position: relative; background-color: #0a0a0a; border-radius: 20px;
         overflow: hidden; display: flex; flex-direction: column; justify-content: center;
-        text-align: center; height: 260px; margin-bottom: 20px;
-        border: 2px solid #1a1a1a; box-shadow: 0 0 20px rgba(0, 212, 255, 0.2); 
+        text-align: center; border: 2px solid #1a1a1a;
     }
+    .kpi-card { height: 260px; margin-bottom: 20px; }
+    .circle-container { width: 280px; height: 280px; border-radius: 50%; margin: auto; }
+
     .kpi-card::before, .circle-container::before {
         content: ''; position: absolute; width: 250%; height: 250%;
         background: conic-gradient(#00d4ff, #001a1a, #00d4ff);
@@ -37,18 +37,14 @@ st.markdown("""
     .kpi-card::after, .circle-container::after {
         content: ''; position: absolute; background-color: #0a0a0a; inset: 5px; border-radius: 16px;
     }
-    .circle-container {
-        position: relative; width: 280px; height: 280px; border-radius: 50%;
-        margin: auto; overflow: hidden; display: flex; justify-content: center; align-items: center; text-align: center;
-        border: 2px solid #1a1a1a; box-shadow: 0 0 25px rgba(0, 212, 255, 0.25);
-    }
     .circle-container::after { border-radius: 50%; inset: 10px; }
+    
     @keyframes rotate-wave { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
     
     .content-box { position: relative; z-index: 10; width: 100%; padding: 10px; }
-    .label-full { color: #aaaaaa; font-size: 22px; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
+    .label-full { color: #aaaaaa; font-size: 22px; font-weight: 900; text-transform: uppercase; }
     .val-full { color: #00d4ff; font-size: 50px; font-weight: 900; line-height: 1; }
-    .bm-full { color: #444444; font-size: 14px; font-weight: bold; margin-top: 10px; text-transform: uppercase; }
+    .bm-full { color: #444444; font-size: 14px; font-weight: bold; margin-top: 10px; }
     
     .census-box-mini { 
         position: relative; background: #0a0a0a; border: 2px solid #FFD700; border-radius: 12px; 
@@ -60,30 +56,22 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# أيقونة الأعمدة الموسيقية
 m_bars = '<div class="visualizer"><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div></div>'
 
-# 3. إدارة البيانات - الترتيب تصاعدي (3Q 2024 ثم 1Q 2025)
-if 'step' not in st.session_state: st.session_state.step = 0
-
-pdf_quarters = [
+# بيانات ثابتة لفرع الرياض ICU (تصاعدي)
+current_q = pdf_quarters = [
     {"q": "3Q 2024", "sq": [0.36, 0.36, 6.90, 2.63, 1.02, 0.00], "sq_bm": [0.28, 0.05, 4.60, 1.20, 0.40, 1.89],
-     "cir": [20.69, 0.00, 4.69, 12.54, 68.25, 0.00], "cir_bm": [6.32, 1.89, 4.51, 19.20, 83.36, 0.25]},
-    {"q": "1Q 2025", "sq": [1.59, 0.80, 4.17, 3.02, 0.00, 6.69], "sq_bm": [0.12, 0.03, 4.96, 1.26, 0.43, 1.91],
-     "cir": [12.50, 6.69, 1.43, 12.87, 70.00, 0.00], "cir_bm": [8.23, 1.91, 3.97, 19.15, 83.78, 0.26]}
+     "cir": [20.69, 0.00, 4.69, 12.54, 68.25, 0.00], "cir_bm": [6.32, 1.89, 4.51, 19.20, 83.36, 0.25]}
 ]
+# ملاحظة: إذا كنت تريد التبديل التلقائي بدون وميض، يفضل تثبيت ربع واحد حالياً 
+# أو استخدام مكون واحد فقط للعرض. هنا ثبتنا البيانات لضمان عدم حدوث Flicker.
 
-device_weeks = [
-    {"w": "Week 1", "census": 23, "occ": "78%", "vals": [12, 16, 4, 3.5]},
-    {"w": "Week 2", "census": 28, "occ": "93%", "vals": [11, 15, 6, 4.5]}
-]
-
-cur_pdf = pdf_quarters[st.session_state.step % len(pdf_quarters)]
-cur_dev = device_weeks[st.session_state.step % len(device_weeks)]
+cur_pdf = pdf_quarters[0]
+cur_dev = {"w": "Current Week", "census": 23, "occ": "78%", "vals": [12, 16, 4, 3.5]}
 
 # --- العرض ---
 st.markdown(f"<h1 style='text-align: center; color: #00d4ff; font-size: 50px; font-weight:900;'>ICU DASHBOARD</h1>", unsafe_allow_html=True)
-st.markdown(f"<p style='text-align: center; color: #FFD700; font-size: 20px; font-weight:bold;'>QUARTERLY PERFORMANCE: {cur_pdf['q']}</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center; color: #FFD700; font-size: 20px; font-weight:bold;'>STABLE PERFORMANCE VIEW: {cur_pdf['q']}</p>", unsafe_allow_html=True)
 
 sq_names = ["Falls", "Injury Falls", "HAPI %", "CLABSI", "CAUTI", "VAE Rate"]
 c1 = st.columns(6)
@@ -91,7 +79,7 @@ for i in range(6):
     v, b = cur_pdf['sq'][i], cur_pdf['sq_bm'][i]
     color = "#00ffaa" if v <= b else "#ff4b4b"
     with c1[i]:
-        st.markdown(f'<div class="kpi-card">{m_bars}<div class="content-box"><div class="label-full">{sq_names[i]}</div><div class="val-full" style="color:{color}">{v}</div><div class="bm-full">BENCHMARK: {b}</div></div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card">{m_bars}<div class="content-box"><div class="label-full">{sq_names[i]}</div><div class="val-full" style="color:{color}">{v}</div><div class="bm-full">BM: {b}</div></div></div>', unsafe_allow_html=True)
 
 st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
 cir_names = ["Restraints", "VAE Rate", "Turnover", "Nurse Hr", "RN Edu", "C-Diff"]
@@ -101,7 +89,7 @@ for i in range(6):
     is_rev = any(x in cir_names[i] for x in ["Hr", "Edu"])
     color = "#00ffaa" if (v >= b if is_rev else v <= b) else "#ff4b4b"
     with c2[i]:
-        st.markdown(f'<div class="circle-container">{m_bars}<div class="content-box"><div class="label-full" style="font-size:18px;">{cir_names[i]}</div><div class="val-full" style="color:{color}; font-size:42px;">{v}</div><div class="bm-full">BENCHMARK: {b}</div></div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="circle-container">{m_bars}<div class="content-box"><div class="label-full" style="font-size:18px;">{cir_names[i]}</div><div class="val-full" style="color:{color}; font-size:42px;">{v}</div><div class="bm-full">BM: {b}</div></div></div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='border-color:#111; margin:40px 0;'>", unsafe_allow_html=True)
 
@@ -113,7 +101,7 @@ with col_left:
     with sub_c2:
         st.markdown(f'<div class="census-box-mini" style="border-color:#00d4ff;">{m_bars}<div style="color:#555; font-size:12px; font-weight:bold; position:relative; z-index:10;">OCCUPANCY RATE</div><div class="census-num-mini" style="color:#00d4ff;">{cur_dev["occ"]}</div></div>', unsafe_allow_html=True)
     
-    st.markdown(f'<div class="side-header">ATTACHED DEVICES <span style="color:#FFD700; font-size:16px;">({cur_dev["w"]})</span></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="side-header">ATTACHED DEVICES</div>', unsafe_allow_html=True)
     g_cols = st.columns(4)
     dev_info = [("Pt with ETT", 36, [10, 18]), ("Pt with Foley", 36, [24, 30]), ("Pt with CVC", 36, [16, 22]), ("Avg Stay", 10, [4, 6])]
     for i, (name, mx, steps) in enumerate(dev_info):
@@ -136,7 +124,3 @@ with col_right:
     fig_bar.add_trace(go.Bar(x=sq_names, y=cur_pdf['sq_bm'], name="Benchmark", marker_color='#1a1a1a'))
     fig_bar.update_layout(height=400, barmode='group', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(t=20, b=20, l=0, r=0), legend=dict(font=dict(color="#888"), orientation="h", y=1.2))
     st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
-
-time.sleep(15)
-st.session_state.step += 1
-st.rerun()
