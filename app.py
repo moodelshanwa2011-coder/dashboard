@@ -1,170 +1,255 @@
 import streamlit as st
-import plotly.graph_objects as go
-import time
+import streamlit.components.v1 as components
 
-# 1. إعدادات الصفحة
-st.set_page_config(page_title="ICU Dashboard", layout="wide", initial_sidebar_state="collapsed")
+# إعداد الصفحة لتكون بملء الشاشة وبدون هوامش
+st.set_page_config(
+    page_title="ICU Riyadh | Executive Dashboard",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-# 2. CSS المعتمد - حدود نيون قوية وتنسيق احترافي
-st.markdown("""
+dashboard_html = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-    [data-testid="stAppViewContainer"] { background-color: #000000; color: #ffffff; }
-    
-    .kpi-card {
-        position: relative; background-color: #0a0a0a; border-radius: 20px;
-        overflow: hidden; display: flex; flex-direction: column; justify-content: center;
-        text-align: center; height: 260px; margin-bottom: 20px;
-        border: 2px solid #1a1a1a; box-shadow: 0 0 20px rgba(0, 212, 255, 0.2); 
-    }
-    .kpi-card::before, .circle-container::before {
-        content: ''; position: absolute; width: 250%; height: 250%;
-        background: conic-gradient(#00d4ff, #001a1a, #00d4ff);
-        animation: rotate-wave 4s linear infinite; top: 50%; left: 50%;
-    }
-    .kpi-card::after, .circle-container::after {
-        content: ''; position: absolute; background-color: #0a0a0a; inset: 5px; border-radius: 16px;
-    }
-    
-    .circle-container {
-        position: relative; width: 280px; height: 280px; border-radius: 50%;
-        margin: auto; overflow: hidden; display: flex; justify-content: center; align-items: center; text-align: center;
-        border: 2px solid #1a1a1a; box-shadow: 0 0 25px rgba(0, 212, 255, 0.25);
-    }
-    .circle-container::after { border-radius: 50%; inset: 10px; }
-    
-    @keyframes rotate-wave { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
-    
-    .content-box { position: relative; z-index: 10; width: 100%; padding: 10px; }
-    .label-full { color: #aaaaaa; font-size: 20px; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
-    .val-full { color: #00d4ff; font-size: 48px; font-weight: 900; line-height: 1; }
-    .bm-full { color: #444444; font-size: 13px; font-weight: bold; margin-top: 10px; text-transform: uppercase; }
+        :root {
+            --bg: #020617;
+            --card-bg: rgba(15, 23, 42, 0.8);
+            --neon-blue: #22d3ee;
+            --neon-red: #f43f5e;
+            --border-clr: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 25px;
+            overflow: hidden;
+        }
 
-    .census-box-mini { 
-        background: #0a0a0a; border: 2px solid #FFD700; border-radius: 12px; 
-        padding: 10px 20px; text-align: left; margin-bottom: 15px;
-        box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
-    }
-    .census-num-mini { color: #FFD700; font-size: 38px; font-weight: 900; }
-    .side-header { color: #00d4ff; font-size: 26px; font-weight: 900; margin-bottom: 15px; text-transform: uppercase; }
-    .gauge-label-bottom { color: #ffffff; font-size: 14px; font-weight: 900; text-transform: uppercase; margin-top: -20px; text-align: center; }
+        .dashboard-container { max-width: 1580px; margin: 0 auto; }
+
+        /* Header Style */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            padding: 20px 45px;
+            border-radius: 20px;
+            border: 1px solid var(--border-clr);
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .q-badge {
+            background: linear-gradient(135deg, #0891b2, #22d3ee);
+            color: #020617;
+            padding: 10px 35px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 1.4rem;
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.4);
+        }
+
+        /* KPI Grid with Professional Borders */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            border-radius: 22px;
+            padding: 25px;
+            text-align: center;
+            /* حدود واضحة واحترافية */
+            border: 2px solid var(--border-clr);
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 25px rgba(34, 211, 238, 0.2);
+            background: rgba(34, 211, 238, 0.03);
+        }
+
+        .kpi-title { 
+            font-size: 0.9rem; 
+            font-weight: 700; 
+            color: var(--text-dim); 
+            text-transform: uppercase; 
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .val-large {
+            font-size: 3.5rem;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .safe { color: var(--neon-blue); text-shadow: 0 0 15px rgba(34, 211, 238, 0.4); }
+        .alert { color: var(--neon-red); text-shadow: 0 0 15px rgba(244, 63, 94, 0.4); }
+
+        /* Benchmark Styling directly under the value */
+        .bm-container {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #475569;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px 15px;
+            border-radius: 8px;
+            display: inline-block;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* Analytics Section */
+        .bottom-section {
+            display: grid;
+            grid-template-columns: 2fr 1.1fr;
+            gap: 25px;
+            height: 380px;
+        }
+
+        .glass-panel {
+            background: var(--card-bg);
+            border-radius: 25px;
+            padding: 30px;
+            border: 1px solid var(--border-clr);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .score-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 12px solid #1e293b;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 1s ease;
+            position: relative;
+        }
+
+        .score-num { font-size: 4rem; font-weight: 900; line-height: 1; }
+        .score-txt { font-size: 1.1rem; font-weight: 700; color: var(--text-dim); margin-top: 15px; }
     </style>
-    """, unsafe_allow_html=True)
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <div>
+                <h1 style="margin:0; font-size:1.8rem; letter-spacing:1px;">ICU <span style="color:var(--neon-blue)">PERFORMANCE</span> TRACKER</h1>
+                <p style="margin:5px 0 0 0; color:var(--text-dim); font-weight:600;">SAUDI GERMAN HEALTH | RIYADH</p>
+            </div>
+            <div class="q-badge" id="qLabel">4Q 2023</div>
+        </div>
 
-# 3. داتا الـ PDF الشاملة (جميع الأعمدة من الملف)
-if 'step' not in st.session_state: st.session_state.step = 0
+        <div class="grid" id="kpiGrid"></div>
 
-pdf_data = [
-    {
-        "q": "4Q 2023",
-        "sq": [0, 0, 0, 0.58, 0, 0], 
-        "sq_bm": [0.04, 0.03, 3.48, 1.25, 0.53, 1.84],
-        "cir": [5.21, 0, 1.60, 11.52, 83.53, 0],
-        "cir_bm": [4.49, 1.84, 4.84, 16.71, 67.19, 0.21]
-    },
-    {
-        "q": "1Q 2024",
-        "sq": [0.24, 0, 5.14, 0.81, 0, 0.96],
-        "sq_bm": [0.09, 0.04, 4.29, 1.15, 0.44, 1.87],
-        "cir": [6.25, 0.96, 4.49, 10.15, 82.99, 0],
-        "cir_bm": [3.74, 1.87, 4.84, 18.06, 71.21, 0.22]
-    },
-    {
-        "q": "3Q 2024",
-        "sq": [0.36, 0.36, 6.90, 2.63, 1.02, 0],
-        "sq_bm": [0.28, 0.05, 4.60, 1.20, 0.40, 1.89],
-        "cir": [4.69, 0, 4.35, 12.54, 68.25, 0],
-        "cir_bm": [4.51, 1.89, 4.16, 19.20, 83.36, 0.25]
-    },
-    {
-        "q": "4Q 2024",
-        "sq": [0, 0, 9.68, 1.80, 1.13, 1.60],
-        "sq_bm": [0.14, 0.01, 4.61, 1.21, 0.54, 2.49],
-        "cir": [4.35, 1.60, 1.43, 12.39, 71.83, 0],
-        "cir_bm": [4.16, 2.49, 3.97, 19.82, 83.30, 0.11]
-    },
-    {
-        "q": "1Q 2025",
-        "sq": [1.59, 0.80, 4.17, 3.02, 0, 6.69],
-        "sq_bm": [0.12, 0.03, 4.96, 1.26, 0.43, 1.91],
-        "cir": [1.43, 6.69, 2.90, 12.87, 70.00, 0],
-        "cir_bm": [3.97, 1.91, 3.22, 19.15, 83.78, 0.26]
-    },
-    {
-        "q": "2Q 2025",
-        "sq": [0.18, 0.04, 4.58, 3.38, 0.44, 3.40],
-        "sq_bm": [0, 0, 6.67, 1.50, 0, 1.60],
-        "cir": [2.90, 3.40, 0, 19.26, 70.59, 0.45],
-        "cir_bm": [3.22, 1.60, 0, 13.00, 85.01, 0]
-    }
-]
+        <div class="bottom-section">
+            <div class="glass-panel">
+                <canvas id="barChartCanvas"></canvas>
+            </div>
+            <div class="glass-panel">
+                <div class="score-circle" id="circleBorder">
+                    <div class="score-num" id="scoreVal">0%</div>
+                </div>
+                <div class="score-txt">OVERALL SAFETY SCORE</div>
+                <p style="color:#475569; font-size:0.75rem; margin-top:10px;">Benchmarked against Global Standards</p>
+            </div>
+        </div>
+    </div>
 
-device_weeks = [
-    {"w": "Week 1", "census": 23, "occ": "78%", "vals": [12, 16, 4, 3.5]},
-    {"w": "Week 2", "census": 28, "occ": "93%", "vals": [11, 15, 6, 4.5]},
-    {"w": "Week 3", "census": 25, "occ": "85%", "vals": [13, 18, 5, 4.2]}
-]
+    <script>
+        const clinicalData = [
+            { q: "4Q 2023", v: [0, 7.30, 1.38, 1.57, 0, 5.21, 67.2, 13.0], b: [0.04, 26.6, 1.3, 1.0, 0.4, 1.6, 83.5, 8.0] },
+            { q: "1Q 2024", v: [0.24, 6.45, 1.28, 2.17, 0.70, 4.84, 83.0, 20.1], b: [0.09, 7.7, 2.6, 2.4, 0.9, 4.4, 70.3, 19.1] },
+            { q: "2Q 2024", v: [0.06, 6.54, 1.56, 2.04, 0.67, 3.74, 82.7, 18.2], b: [0.24, 14.2, 2.4, 1.0, 0.5, 6.2, 71.2, 12.5] },
+            { q: "3Q 2024", v: [0.28, 4.60, 1.20, 1.89, 0.40, 4.51, 83.4, 18.3], b: [0.36, 6.9, 2.6, 1.0, 1.0, 4.6, 68.2, 19.2] },
+            { q: "1Q 2025", v: [1.59, 4.17, 1.26, 1.91, 0.43, 1.43, 83.8, 18.2], b: [0.12, 4.9, 3.0, 6.6, 0.5, 3.9, 70.0, 19.8] }
+        ];
 
-cur_pdf = pdf_data[st.session_state.step % len(pdf_data)]
-cur_dev = device_weeks[st.session_state.step % len(device_weeks)]
+        const kpis = ["Falls", "Pressure Injury", "CLABSI", "VAE", "CAUTI", "Turnover", "BSN Education", "RN Hours"];
+        let step = 0; let mainChart;
 
-# --- العنوان ---
-st.markdown(f"<h1 style='text-align: center; color: #00d4ff; font-size: 50px; font-weight:900;'>ICU PERFORMANCE DASHBOARD</h1>", unsafe_allow_html=True)
-st.markdown(f"<p style='text-align: center; color: #FFD700; font-size: 22px; font-weight:bold;'>QUARTERLY DATA: {cur_pdf['q']}</p>", unsafe_allow_html=True)
+        function update() {
+            const current = clinicalData[step];
+            document.getElementById('qLabel').innerText = current.q;
+            const grid = document.getElementById('kpiGrid');
+            grid.innerHTML = '';
+            let met = 0;
 
-# الصف 1: المربعات (Falls to VAE)
-sq_labels = ["Falls", "Injury Falls", "HAPI %", "CLABSI", "CAUTI", "VAE Rate"]
-c1 = st.columns(6)
-for i in range(6):
-    v, b = cur_pdf['sq'][i], cur_pdf['sq_bm'][i]
-    color = "#00ffaa" if v <= b else "#ff4b4b"
-    with c1[i]:
-        st.markdown(f'<div class="kpi-card"><div class="content-box"><div class="label-full">{sq_labels[i]}</div><div class="val-full" style="color:{color}">{v}</div><div class="bm-full">BENCHMARK: {b}</div></div></div>', unsafe_allow_html=True)
+            current.v.forEach((val, i) => {
+                const isBad = (i < 6) ? (val > current.b[i]) : (val < current.b[i]);
+                const cls = isBad ? 'alert' : 'safe';
+                if(!isBad) met++;
+                
+                grid.innerHTML += `
+                    <div class="kpi-card">
+                        <div class="kpi-title">${kpis[i]}</div>
+                        <div class="val-large ${cls}">${val}</div>
+                        <div class="bm-container">Benchmark: ${current.b[i]}</div>
+                    </div>`;
+            });
 
-# الصف 2: الدوائر (Turnover, Education, Restraints etc.)
-cir_labels = ["Turnover", "VAE Rate", "Restraints", "Nurse Hr", "RN Education", "C-Diff"]
-st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
-c2 = st.columns(6)
-for i in range(6):
-    v, b = cur_pdf['cir'][i], cur_pdf['cir_bm'][i]
-    is_positive = "Education" in cir_labels[i] or "Nurse Hr" in cir_labels[i]
-    color = "#00ffaa" if (v >= b if is_positive else v <= b) else "#ff4b4b"
-    with c2[i]:
-        st.markdown(f'<div class="circle-container"><div class="content-box"><div class="label-full" style="font-size:18px;">{cir_labels[i]}</div><div class="val-text" style="color:{color}; font-size:42px; font-weight:900;">{v}</div><div class="bm-full">BENCHMARK: {b}</div></div></div>', unsafe_allow_html=True)
+            const score = Math.round((met/8)*100);
+            const scoreEl = document.getElementById('scoreVal');
+            const ring = document.getElementById('circleBorder');
+            
+            scoreEl.innerText = score + "%";
+            const color = score >= 75 ? "#22d3ee" : "#f43f5e";
+            scoreEl.style.color = color;
+            ring.style.borderColor = color;
+            ring.style.boxShadow = `0 0 35px ${color}44`;
 
-st.markdown("<hr style='border-color:#222; margin:40px 0;'>", unsafe_allow_html=True)
+            if(!mainChart) {
+                const ctx = document.getElementById('barChartCanvas').getContext('2d');
+                mainChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: { 
+                        labels: kpis, 
+                        datasets: [{ data: current.v, backgroundColor: '#22d3ee', borderRadius: 6, barThickness: 25 }] 
+                    },
+                    options: { 
+                        maintainAspectRatio: false, 
+                        plugins: { legend: { display: false } },
+                        scales: { 
+                            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                            x: { ticks: { color: '#f8fafc', font: { weight: 'bold' } } }
+                        }
+                    }
+                });
+            } else {
+                mainChart.data.datasets[0].data = current.v;
+                mainChart.update();
+            }
+            step = (step + 1) % clinicalData.length;
+        }
+        update(); setInterval(update, 8000);
+    </script>
+</body>
+</html>
+"""
 
-# --- السفلي (Devices & Trend) ---
-col_l, col_r = st.columns([2.2, 1.8])
-
-with col_l:
-    s1, s2 = st.columns(2)
-    with s1: st.markdown(f'<div class="census-box-mini"><div style="color:#555; font-size:12px; font-weight:bold;">CURRENT CENSUS</div><div class="census-num-mini">{cur_dev["census"]}</div></div>', unsafe_allow_html=True)
-    with s2: st.markdown(f'<div class="census-box-mini" style="border-color:#00d4ff;"><div style="color:#555; font-size:12px; font-weight:bold;">OCCUPANCY RATE</div><div class="census-num-mini" style="color:#00d4ff;">{cur_dev["occ"]}</div></div>', unsafe_allow_html=True)
-    
-    st.markdown(f'<div class="side-header">ATTACHED DEVICES <span style="color:#FFD700; font-size:16px;">({cur_dev["w"]})</span></div>', unsafe_allow_html=True)
-    g_cols = st.columns(4)
-    dev_names = [("Pt with ETT", 36, [10, 18]), ("Pt with Foley", 36, [24, 30]), ("Pt with CVC", 36, [16, 22]), ("Avg Stay", 10, [4, 6])]
-    for i, (n, mx, stps) in enumerate(dev_names):
-        with g_cols[i]:
-            fig = go.Figure(go.Indicator(
-                mode = "gauge+number", value = cur_dev['vals'][i],
-                number = {'font': {'size': 35, 'color': '#fff'}},
-                gauge = {'axis': {'range': [None, mx], 'tickvals': []}, 'bar': {'color': "#222"}, 'bgcolor': "#000",
-                         'steps': [{'range': [0, stps[0]], 'color': "#00ffaa"}, {'range': [stps[0], stps[1]], 'color': "#FFD700"}, {'range': [stps[1], mx], 'color': "#ff4b4b"}]}
-            ))
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(t=10, b=0, l=10, r=10), height=120)
-            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-            st.markdown(f'<div class="gauge-label-bottom">{n}</div>', unsafe_allow_html=True)
-
-with col_r:
-    st.markdown('<div class="side-header" style="margin-left:20px;">TREND ANALYSIS</div>', unsafe_allow_html=True)
-    fig_bar = go.Figure()
-    fig_bar.add_trace(go.Bar(x=sq_labels, y=cur_pdf['sq'], name="Unit", marker_color='#00d4ff', text=cur_pdf['sq'], textposition='outside'))
-    fig_bar.add_trace(go.Bar(x=sq_labels, y=cur_pdf['sq_bm'], name="Mean", marker_color='#1a1a1a'))
-    fig_bar.update_layout(height=400, barmode='group', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', 
-                          margin=dict(t=20, b=20, l=0, r=0), legend=dict(font=dict(color="#888"), orientation="h", y=1.2))
-    st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
-
-time.sleep(15)
-st.session_state.step += 1
-st.rerun()
+components.html(dashboard_html, height=1000, scrolling=False)
