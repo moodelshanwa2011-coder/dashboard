@@ -2,7 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(
-    page_title="ICU Executive | Live Analytics",
+    page_title="ICU Riyadh | Medical Device Census",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -14,173 +14,183 @@ dashboard_html = """
     <meta charset="UTF-8">
     <style>
         :root {
-            --bg: #020617;
-            --card-bg: rgba(15, 23, 42, 0.85);
-            --neon-blue: #22d3ee;
-            --neon-red: #f43f5e;
-            --border-clr: rgba(255, 255, 255, 0.1);
-            --text-main: #f8fafc;
-            --text-dim: #94a3b8;
+            --bg: #010409;
+            --card-top: rgba(23, 32, 42, 0.9);
+            --card-bottom: rgba(30, 41, 59, 0.5);
+            --neon-blue: #00f2ff;
+            --neon-green: #39ff14;
+            --neon-red: #ff3131;
+            --text-main: #e6edf3;
         }
         
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg);
             color: var(--text-main);
-            margin: 0; padding: 25px; overflow: hidden;
+            margin: 0; padding: 20px; overflow: hidden;
         }
 
+        /* Header Style */
         .header {
             display: flex; justify-content: space-between; align-items: center;
-            background: var(--card-bg); backdrop-filter: blur(20px);
-            padding: 15px 45px; border-radius: 20px; border: 1px solid var(--border-clr);
-            margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-bottom: 2px solid rgba(0, 242, 255, 0.2);
+            padding-bottom: 15px; margin-bottom: 20px;
         }
 
-        .q-badge {
-            background: linear-gradient(135deg, #0891b2, #22d3ee);
-            color: #020617; padding: 8px 30px; border-radius: 12px;
-            font-weight: 900; font-size: 1.2rem;
+        /* تصميم المربعات العلوية - نمط البطاقات الزجاجية الدائرية */
+        .top-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        
+        .top-card {
+            background: var(--card-top);
+            border-radius: 50px 5px 50px 5px; /* شكل مختلف ومميز */
+            padding: 20px; text-align: center;
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            box-shadow: inset 0 0 15px rgba(0, 242, 255, 0.1);
         }
 
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .top-val { font-size: 3rem; font-weight: 900; margin: 5px 0; }
+        .top-label { font-size: 0.8rem; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }
 
-        .kpi-card {
-            background: var(--card-bg); border-radius: 20px; padding: 20px;
-            text-align: center; border: 2px solid var(--border-clr);
-            transition: 0.4s ease;
+        /* تصميم القسم السفلي - نمط المصفوفة التقنية */
+        .census-container {
+            background: var(--card-bottom);
+            border-radius: 20px; padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            height: 450px;
         }
 
-        .val-large { font-size: 2.8rem; font-weight: 900; line-height: 1; margin-bottom: 8px; }
-        .safe { color: var(--neon-blue); text-shadow: 0 0 10px rgba(34, 211, 238, 0.4); }
-        .alert { color: var(--neon-red); text-shadow: 0 0 10px rgba(244, 63, 94, 0.4); }
-
-        /* Weekly Section Styles */
-        .bottom-section { display: grid; grid-template-columns: 2.5fr 1fr; gap: 20px; height: 400px; }
-
-        .weekly-panel {
-            background: var(--card-bg); border-radius: 25px; padding: 25px;
-            border: 1px solid var(--border-clr); display: flex; flex-direction: column;
+        .census-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); /* 5 أعمدة كما في الصور */
+            gap: 15px; height: 85%;
         }
 
-        .weekly-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; flex-grow: 1; }
-
-        .week-box {
-            background: rgba(255,255,255,0.03); border: 1px solid var(--border-clr);
-            border-radius: 15px; padding: 15px; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; position: relative; overflow: hidden;
+        .column-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 12px; padding: 15px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative;
         }
 
-        .week-label { font-size: 0.7rem; color: var(--text-dim); font-weight: 800; margin-bottom: 5px; }
-        .week-val { font-size: 1.8rem; font-weight: 900; color: var(--neon-blue); }
+        .column-val { font-size: 2.2rem; font-weight: 800; color: var(--neon-green); }
+        .column-sub { font-size: 0.7rem; color: #484f58; margin-top: 5px; text-align: center;}
 
-        /* Music Visualizer Bars */
+        /* أعمدة الموسيقى (Music Visualizer) */
         .visualizer {
-            display: flex; align-items: flex-end; gap: 3px; height: 30px; margin-top: 10px;
+            display: flex; align-items: flex-end; gap: 4px; height: 40px; margin-top: 15px;
         }
         .bar {
-            width: 4px; background: var(--neon-blue); border-radius: 2px;
-            animation: bounce 1s ease-in-out infinite;
+            width: 5px; background: var(--neon-green); border-radius: 10px;
+            animation: pulse 1.2s infinite ease-in-out;
         }
-        @keyframes bounce {
-            0%, 100% { height: 5px; opacity: 0.3; }
-            50% { height: 25px; opacity: 1; }
+        @keyframes pulse {
+            0%, 100% { height: 10px; opacity: 0.4; }
+            50% { height: 35px; opacity: 1; filter: brightness(1.2); }
         }
 
-        .score-circle {
-            width: 180px; height: 180px; border-radius: 50%; border: 10px solid #1e293b;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
+        .safe { color: var(--neon-blue); }
+        .alert { color: var(--neon-red); }
     </style>
 </head>
 <body>
     <div class="header">
         <div>
-            <h1 style="margin:0; font-size:1.5rem;">ICU <span style="color:var(--neon-blue)">DYNAMIC</span> MONITOR</h1>
-            <p id="monthDisplay" style="margin:2px 0 0 0; color:var(--text-dim); font-weight:bold;">MARCH - APRIL 2026</p>
+            <h1 style="margin:0; font-size:1.6rem;">SAUDI GERMAN HOSPITAL <span style="color:var(--neon-blue)">| ICU CENSUS</span></h1>
+            <p id="timeLabel" style="color:#8b949e; font-size:0.9rem; font-weight:bold; margin-top:5px;">LIVE DATA TRACKING</p>
         </div>
-        <div class="q-badge" id="qLabel">Q1 2026</div>
+        <div style="text-align:right">
+            <div style="font-size:1.2rem; font-weight:900; color:var(--neon-blue)" id="periodText">MARCH 2026</div>
+            <div style="font-size:0.7rem; opacity:0.5">REFRESH RATE: 20s</div>
+        </div>
     </div>
 
-    <div class="grid" id="kpiGrid"></div>
+    <div class="top-grid" id="topGrid"></div>
 
-    <div class="bottom-section">
-        <div class="weekly-panel">
-            <h3 style="margin: 0 0 15px 0; color: var(--neon-blue); font-size: 0.9rem;">WEEKLY LIVE PERFORMANCE (MARCH/APRIL)</h3>
-            <div class="weekly-grid" id="weeklyGrid"></div>
-        </div>
-        
-        <div class="weekly-panel" style="align-items: center; justify-content: center;">
-            <div class="score-circle" id="ring">
-                <div id="scoreVal" style="font-size: 3.5rem; font-weight: 900;">0%</div>
-            </div>
-            <div style="margin-top:15px; font-weight:800; color:var(--text-dim);">SAFETY SCORE</div>
-        </div>
+    <div class="census-container">
+        <h2 style="font-size:1rem; margin-top:0; color:var(--neon-blue); letter-spacing:2px">WEEKLY DEVICE UTILIZATION</h2>
+        <div class="census-grid" id="censusGrid"></div>
     </div>
 
     <script>
-        const clinicalData = [
-            { q: "MARCH WK1", v: [0.1, 6.2, 1.1, 1.4, 0.2, 4.1, 80, 18], b: [0.2, 7.0, 1.3, 1.5, 0.5, 4.5, 75, 15], w: [0.12, 0.15, 0.08, 0.11] },
-            { q: "MARCH WK2", v: [0.0, 5.8, 1.0, 2.1, 0.1, 3.8, 82, 19], b: [0.2, 7.0, 1.3, 1.5, 0.5, 4.5, 75, 15], w: [0.09, 0.11, 0.14, 0.10] },
-            { q: "APRIL WK1", v: [0.2, 4.5, 1.4, 1.8, 0.6, 4.2, 85, 20], b: [0.3, 5.0, 1.5, 2.0, 0.8, 4.0, 80, 18], w: [0.22, 0.19, 0.25, 0.18] },
-            { q: "APRIL WK2", v: [0.1, 4.2, 1.2, 1.5, 0.3, 3.5, 88, 22], b: [0.3, 5.0, 1.5, 2.0, 0.8, 4.0, 80, 18], w: [0.15, 0.17, 0.20, 0.12] }
+        // داتا الصور: Patient Stay, Foley, Central Line, Ventilator, IV Sites
+        const dataset = [
+            { 
+                label: "MARCH - WEEK 1",
+                top: [34, 14, 7, 14], // Patient Stay, Foley, Lines, Vent
+                census: [34, 14, 7, 14, 25], // الـ 5 أعمدة من الصورة
+                staff: "SAJEESH / VIMAL"
+            },
+            { 
+                label: "MARCH - WEEK 2",
+                top: [24, 15, 3, 11],
+                census: [24, 15, 3, 11, 24],
+                staff: "RINSON / NIKHIL"
+            },
+            { 
+                label: "APRIL - WEEK 1",
+                top: [29, 15, 8, 11],
+                census: [29, 15, 8, 11, 22],
+                staff: "JILS / VIMAL"
+            },
+            { 
+                label: "APRIL - WEEK 2",
+                top: [31, 18, 7, 12],
+                census: [31, 18, 7, 12, 30],
+                staff: "JILS / KHALED"
+            }
         ];
 
-        const kpis = ["Falls", "Pressure", "CLABSI", "VAE", "CAUTI", "Turnover", "BSN Edu", "RN Hours"];
-        let step = 0;
+        const topTitles = ["Total Stay", "Foley Catheter", "Central Lines", "Ventilators"];
+        let currentIndex = 0;
 
-        function update() {
-            const data = clinicalData[step];
-            document.getElementById('qLabel').innerText = data.q;
-            
-            // 1. Update Top KPIs
-            const grid = document.getElementById('kpiGrid');
-            grid.innerHTML = '';
-            let met = 0;
-            data.v.forEach((val, i) => {
-                const isBad = (i < 6) ? (val > data.b[i]) : (val < data.b[i]);
-                if(!isBad) met++;
-                grid.innerHTML += `
-                    <div class="kpi-card">
-                        <div style="font-size:0.8rem; color:var(--text-dim); font-weight:700;">${kpis[i]}</div>
-                        <div class="val-large ${isBad?'alert':'safe'}">${val}</div>
-                        <div style="font-size:0.7rem; opacity:0.6;">BM: ${data.b[i]}</div>
+        function refreshDashboard() {
+            const data = dataset[currentIndex];
+            document.getElementById('periodText').innerText = data.label;
+
+            // تحديث المربعات العلوية
+            const topGrid = document.getElementById('topGrid');
+            topGrid.innerHTML = '';
+            data.top.forEach((val, i) => {
+                topGrid.innerHTML += `
+                    <div class="top-card">
+                        <div class="top-label">${topTitles[i]}</div>
+                        <div class="top-val safe">${val}</div>
                     </div>`;
             });
 
-            // 2. Update Weekly Matrix with Music Bars
-            const wGrid = document.getElementById('weeklyGrid');
-            wGrid.innerHTML = '';
-            data.w.forEach((wv, i) => {
-                wGrid.innerHTML += `
-                    <div class="week-box">
-                        <div class="week-label">WEEK 0${i+1} DATA</div>
-                        <div class="week-val">${wv}</div>
+            // تحديث الـ 5 أعمدة السفلية (بدون أسماء، فقط أرقام وأعمدة موسيقى)
+            const censusGrid = document.getElementById('censusGrid');
+            censusGrid.innerHTML = '';
+            data.census.forEach((val, i) => {
+                censusGrid.innerHTML += `
+                    <div class="column-box">
+                        <div class="column-val">${val}</div>
                         <div class="visualizer">
-                            <div class="bar" style="animation-delay: 0.1s"></div>
-                            <div class="bar" style="animation-delay: 0.3s"></div>
-                            <div class="bar" style="animation-delay: 0.5s"></div>
-                            <div class="bar" style="animation-delay: 0.2s"></div>
-                            <div class="bar" style="animation-delay: 0.4s"></div>
+                            <div class="bar" style="animation-delay: ${Math.random()}s"></div>
+                            <div class="bar" style="animation-delay: ${Math.random()}s"></div>
+                            <div class="bar" style="animation-delay: ${Math.random()}s"></div>
+                            <div class="bar" style="animation-delay: ${Math.random()}s"></div>
                         </div>
+                        <div class="column-sub">Column ${i+1} Units</div>
                     </div>`;
             });
 
-            // 3. Update Score
-            const score = Math.round((met/8)*100);
-            document.getElementById('scoreVal').innerText = score + "%";
-            const clr = score >= 75 ? "#22d3ee" : "#f43f5e";
-            document.getElementById('scoreVal').style.color = clr;
-            document.getElementById('ring').style.borderColor = clr;
+            // إضافة اسم الـ Staff في زاوية القسم السفلي بشكل احترافي
+            censusGrid.innerHTML += `
+                <div style="position:absolute; bottom:40px; right:40px; text-align:right">
+                    <div style="font-size:0.6rem; color:#484f58">ON-DUTY STAFF</div>
+                    <div style="font-size:0.9rem; font-weight:bold; color:var(--neon-blue)">${data.staff}</div>
+                </div>`;
 
-            step = (step + 1) % clinicalData.length;
+            currentIndex = (currentIndex + 1) % dataset.length;
         }
 
-        update();
-        setInterval(update, 20000); // تحديث كل 20 ثانية
+        refreshDashboard();
+        setInterval(refreshDashboard, 20000); // التغير كل 20 ثانية
     </script>
 </body>
 </html>
 """
 
-components.html(dashboard_html, height=1000, scrolling=False)
+components.html(dashboard_html, height=950, scrolling=False)
