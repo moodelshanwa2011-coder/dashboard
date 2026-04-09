@@ -26,7 +26,7 @@ dashboard_html = """
             background-image: 
                 linear-gradient(var(--grid-line) 2px, transparent 2px),
                 linear-gradient(90deg, var(--grid-line) 2px, transparent 2px);
-            background-size: 45px 45px;
+            background-size: 50px 50px;
             color: #fff; margin: 0; padding: 20px; overflow: hidden;
         }
 
@@ -66,18 +66,19 @@ dashboard_html = """
         .lbl { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; margin-top: 8px; font-weight: 800; }
         .bm-label { font-size: 0.65rem; color: #475569; display: block; margin-top: 6px; font-weight: bold; border-top: 1px solid #333; padding-top: 4px; }
 
-        .footer { display: grid; grid-template-columns: 2.5fr 1.5fr; gap: 20px; height: 320px; }
+        .footer { display: grid; grid-template-columns: 2.8fr 1.2fr; gap: 20px; height: 350px; }
 
-        .ring-container { position: relative; width: 200px; height: 200px; margin: auto; }
+        /* تصغير حجم دايرة السيفتي */
+        .ring-container { position: relative; width: 160px; height: 160px; margin: auto; }
         .ring-text { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            font-size: 2.8rem; font-weight: 900; color: var(--safe-blue); 
+            font-size: 2.2rem; font-weight: 900; color: var(--safe-blue); 
         }
         
         .ring-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
-        .ring-track { fill: none; stroke: var(--danger-red); stroke-width: 14; } 
+        .ring-track { fill: none; stroke: var(--danger-red); stroke-width: 12; } 
         .ring-progress { 
-            fill: none; stroke: var(--safe-blue); stroke-width: 14; 
+            fill: none; stroke: var(--safe-blue); stroke-width: 12; 
             stroke-dasharray: 283; stroke-dashoffset: 283; 
             stroke-linecap: butt; transition: stroke-dashoffset 1.5s ease;
         }
@@ -96,11 +97,11 @@ dashboard_html = """
     <div class="panel">
         <div class="panel-title">KPI Achievement Monitor</div>
         <div style="flex-grow: 1; position: relative;">
-            <canvas id="horizChart"></canvas>
+            <canvas id="verticalChart"></canvas>
         </div>
     </div>
     
-    <div class="panel" style="display:flex; flex-direction: row; align-items:center; justify-content:center; gap:30px;">
+    <div class="panel" style="display:flex; flex-direction: column; align-items:center; justify-content:center; gap:15px;">
         <div class="ring-container">
             <svg class="ring-svg" viewBox="0 0 100 100">
                 <circle class="ring-track" cx="50" cy="50" r="45"></circle>
@@ -108,9 +109,9 @@ dashboard_html = """
             </svg>
             <div id="safetyVal" class="ring-text">0%</div>
         </div>
-        <div style="text-align: left;">
-            <h3 style="color: var(--safe-blue); margin: 0; font-size: 1.4rem;">UNIT SAFETY</h3>
-            <p style="color: #94a3b8; font-size: 0.8rem; margin: 5px 0;">Dynamic Quality Index</p>
+        <div style="text-align: center;">
+            <h3 style="color: var(--safe-blue); margin: 0; font-size: 1.1rem; letter-spacing: 1px;">UNIT SAFETY</h3>
+            <p style="color: #94a3b8; font-size: 0.75rem; margin: 4px 0;">Quality Index Score</p>
         </div>
     </div>
 </div>
@@ -125,7 +126,7 @@ dashboard_html = """
                 { id: "staff", title: "Workforce", items: [["BSN %", 67.2, 83.5]] },
                 { id: "restr", title: "Restraints Control", items: [["Restraints", 23.3, 5.08]] },
                 { id: "hours", title: "Nursing Hours", class: "span-2", items: [["RN Hours", 13.0, 8.0], ["CNA Hours", 1.1, 1.2]] },
-                { id: "skin", title: "Skin Integrity", items: [["Pressure Injuries", 7.3, 26.6]] }
+                { id: "skin", title: "Pressure Injuries", items: [["Skin Health", 7.3, 26.6]] }
             ]
         },
         {
@@ -136,7 +137,7 @@ dashboard_html = """
                 { id: "staff", title: "Workforce", items: [["BSN %", 83.0, 70.3]] },
                 { id: "restr", title: "Restraints Control", items: [["Restraints", 6.45, 6.47]] },
                 { id: "hours", title: "Nursing Hours", class: "span-2", items: [["RN Hours", 20.1, 19.1], ["CNA Hours", 1.5, 1.3]] },
-                { id: "skin", title: "Skin Integrity", items: [["Pressure Injuries", 6.45, 7.77]] }
+                { id: "skin", title: "Pressure Injuries", items: [["Skin Health", 6.45, 7.77]] }
             ]
         }
     ];
@@ -184,24 +185,24 @@ dashboard_html = """
         const barColors = d.groups.map(g => getDynamicColor(g.items[0][1], g.items[0][2], g.items[0][0]));
 
         if(!chart) {
-            const ctx = document.getElementById('horizChart').getContext('2d');
+            const ctx = document.getElementById('verticalChart').getContext('2d');
             chart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: d.groups.map(g => g.title),
-                    datasets: [{ data: d.groups.map(g => g.items[0][1]), backgroundColor: barColors, borderRadius: 6 }]
+                    datasets: [{ data: d.groups.map(g => g.items[0][1]), backgroundColor: barColors, borderRadius: 8 }]
                 },
                 options: {
-                    indexAxis: 'y', maintainAspectRatio: false,
+                    maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        x: { 
-                            title: { display: true, text: 'KPI VALUE', color: '#94a3b8', font: { size: 10, weight: 'bold' } },
+                        y: { 
+                            title: { display: true, text: 'KPI VALUE', color: '#94a3b8', font: { weight: 'bold' } },
                             grid: { color: 'rgba(255,255,255,0.05)' }, 
                             ticks: { color: '#94a3b8' } 
                         },
-                        y: { 
-                            title: { display: true, text: 'BENCHMARKING INDICATORS', color: '#94a3b8', font: { size: 10, weight: 'bold' } },
+                        x: { 
+                            title: { display: true, text: 'BENCHMARKING INDICATORS', color: '#94a3b8', font: { weight: 'bold' } },
                             ticks: { color: '#fff', font: { weight: 'bold', size: 10 } } 
                         }
                     }
