@@ -16,7 +16,7 @@ dashboard_html = """
             --safe-blue: #00f2ff;
             --warn-yellow: #ffea00;
             --danger-red: #ff0044;
-            --grid-line: rgba(0, 242, 255, 0.28);
+            --grid-line: rgba(0, 242, 255, 0.25);
             --border: rgba(0, 242, 255, 0.6);
         }
         
@@ -24,60 +24,60 @@ dashboard_html = """
             font-family: 'Inter', sans-serif;
             background-color: var(--bg);
             background-image: 
-                linear-gradient(var(--grid-line) 2.5px, transparent 2.5px),
-                linear-gradient(90deg, var(--grid-line) 2.5px, transparent 2.5px);
-            background-size: 55px 55px;
+                linear-gradient(var(--grid-line) 2px, transparent 2px),
+                linear-gradient(90deg, var(--grid-line) 2px, transparent 2px);
+            background-size: 45px 45px;
             color: #fff; margin: 0; padding: 20px; overflow: hidden;
         }
 
         .header {
             display: flex; justify-content: space-between; align-items: center;
-            background: var(--panel-bg); padding: 15px 40px; border-radius: 15px;
-            border: 3px solid var(--border); margin-bottom: 20px;
+            background: var(--panel-bg); padding: 12px 35px; border-radius: 12px;
+            border: 2px solid var(--border); margin-bottom: 20px;
         }
 
         .main-grid {
             display: grid; grid-template-columns: repeat(4, 1fr);
-            gap: 20px; margin-bottom: 20px;
+            gap: 15px; margin-bottom: 20px;
         }
 
         .panel {
-            background: var(--panel-bg); border: 3px solid var(--border);
-            border-radius: 20px; padding: 25px; backdrop-filter: blur(15px);
-            display: flex; flex-direction: column; justify-content: space-between;
+            background: var(--panel-bg); border: 2.5px solid var(--border);
+            border-radius: 18px; padding: 20px; backdrop-filter: blur(15px);
+            display: flex; flex-direction: column;
         }
 
         .span-2 { grid-column: span 2; }
 
         .panel-title {
-            font-size: 1.1rem; font-weight: 900; color: var(--safe-blue);
-            text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px;
-            border-left: 8px solid var(--safe-blue); padding-left: 15px;
+            font-size: 0.95rem; font-weight: 900; color: var(--safe-blue);
+            text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 15px;
+            border-left: 6px solid var(--safe-blue); padding-left: 12px;
         }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
         
         .box {
-            background: rgba(255,255,255,0.04); border: 1.5px solid rgba(255,255,255,0.15);
-            border-radius: 15px; padding: 20px; text-align: center;
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 15px; text-align: center;
         }
 
-        .val { font-size: 2.5rem; font-weight: 900; display: block; line-height: 1; transition: color 0.5s; }
-        .lbl { font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; margin-top: 10px; font-weight: 800; }
-        .bm-label { font-size: 0.75rem; color: #475569; display: block; margin-top: 8px; font-weight: bold; border-top: 1px solid #333; padding-top: 5px; }
+        .val { font-size: 2.2rem; font-weight: 900; display: block; line-height: 1; }
+        .lbl { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; margin-top: 8px; font-weight: 800; }
+        .bm-label { font-size: 0.65rem; color: #475569; display: block; margin-top: 6px; font-weight: bold; border-top: 1px solid #333; padding-top: 4px; }
 
-        .footer { display: grid; grid-template-columns: 2.3fr 1.7fr; gap: 25px; height: 380px; }
+        .footer { display: grid; grid-template-columns: 2.5fr 1.5fr; gap: 20px; height: 320px; }
 
-        .ring-container { position: relative; width: 250px; height: 250px; margin: auto; }
+        .ring-container { position: relative; width: 200px; height: 200px; margin: auto; }
         .ring-text { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            font-size: 3.5rem; font-weight: 900; color: var(--safe-blue); 
+            font-size: 2.8rem; font-weight: 900; color: var(--safe-blue); 
         }
         
         .ring-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
-        .ring-track { fill: none; stroke: var(--danger-red); stroke-width: 16; } 
+        .ring-track { fill: none; stroke: var(--danger-red); stroke-width: 14; } 
         .ring-progress { 
-            fill: none; stroke: var(--safe-blue); stroke-width: 16; 
+            fill: none; stroke: var(--safe-blue); stroke-width: 14; 
             stroke-dasharray: 283; stroke-dashoffset: 283; 
             stroke-linecap: butt; transition: stroke-dashoffset 1.5s ease;
         }
@@ -86,21 +86,21 @@ dashboard_html = """
 <body>
 
 <div class="header">
-    <div style="font-size: 1.7rem; font-weight: 900; letter-spacing: 3px;">SGH RIYADH <span style="color:var(--safe-blue)">| ICU INTELLIGENT MONITOR</span></div>
-    <div id="qLabel" style="background: var(--safe-blue); color: #000; padding: 8px 35px; border-radius: 12px; font-weight: 900; font-size: 1.3rem;">...</div>
+    <div style="font-size: 1.4rem; font-weight: 900;">SGH RIYADH <span style="color:var(--safe-blue)">| COMMAND CENTER</span></div>
+    <div id="qLabel" style="background: var(--safe-blue); color: #000; padding: 6px 25px; border-radius: 8px; font-weight: 900; font-size: 1.1rem;">...</div>
 </div>
 
 <div class="main-grid" id="mainGrid"></div>
 
 <div class="footer">
     <div class="panel">
-        <div class="panel-title">Dynamic Performance Thresholds (X/Y Axis)</div>
+        <div class="panel-title">KPI Achievement Monitor</div>
         <div style="flex-grow: 1; position: relative;">
             <canvas id="horizChart"></canvas>
         </div>
     </div>
     
-    <div class="panel" style="display:flex; flex-direction: row; align-items:center; justify-content:space-around;">
+    <div class="panel" style="display:flex; flex-direction: row; align-items:center; justify-content:center; gap:30px;">
         <div class="ring-container">
             <svg class="ring-svg" viewBox="0 0 100 100">
                 <circle class="ring-track" cx="50" cy="50" r="45"></circle>
@@ -108,13 +108,9 @@ dashboard_html = """
             </svg>
             <div id="safetyVal" class="ring-text">0%</div>
         </div>
-        <div style="text-align: left; min-width: 150px;">
-            <h2 style="color: var(--safe-blue); margin: 0; font-size: 1.8rem;">UNIT SAFETY</h2>
-            <div style="margin-top: 15px; font-size: 0.95rem; line-height: 1.8;">
-                <div style="color: var(--safe-blue); font-weight: 800;">● BLUE: OPTIMAL</div>
-                <div style="color: var(--warn-yellow); font-weight: 800;">● YELLOW: CAUTION</div>
-                <div style="color: var(--danger-red); font-weight: 800;">● RED: CRITICAL GAP</div>
-            </div>
+        <div style="text-align: left;">
+            <h3 style="color: var(--safe-blue); margin: 0; font-size: 1.4rem;">UNIT SAFETY</h3>
+            <p style="color: #94a3b8; font-size: 0.8rem; margin: 5px 0;">Dynamic Quality Index</p>
         </div>
     </div>
 </div>
@@ -129,7 +125,7 @@ dashboard_html = """
                 { id: "staff", title: "Workforce", items: [["BSN %", 67.2, 83.5]] },
                 { id: "restr", title: "Restraints Control", items: [["Restraints", 23.3, 5.08]] },
                 { id: "hours", title: "Nursing Hours", class: "span-2", items: [["RN Hours", 13.0, 8.0], ["CNA Hours", 1.1, 1.2]] },
-                { id: "skin", title: "Skin Health", items: [["Skin Survey", 7.3, 26.6]] }
+                { id: "skin", title: "Skin Integrity", items: [["Pressure Injuries", 7.3, 26.6]] }
             ]
         },
         {
@@ -140,7 +136,7 @@ dashboard_html = """
                 { id: "staff", title: "Workforce", items: [["BSN %", 83.0, 70.3]] },
                 { id: "restr", title: "Restraints Control", items: [["Restraints", 6.45, 6.47]] },
                 { id: "hours", title: "Nursing Hours", class: "span-2", items: [["RN Hours", 20.1, 19.1], ["CNA Hours", 1.5, 1.3]] },
-                { id: "skin", title: "Skin Health", items: [["Skin Survey", 6.45, 7.77]] }
+                { id: "skin", title: "Skin Integrity", items: [["Pressure Injuries", 6.45, 7.77]] }
             ]
         }
     ];
@@ -151,13 +147,13 @@ dashboard_html = """
     function getDynamicColor(val, bm, label) {
         const isBetterHigh = label.includes("BSN") || label.includes("Hours");
         if (isBetterHigh) {
-            if (val >= bm) return '#00f2ff'; // Safe
-            if (val >= bm * 0.85) return '#ffea00'; // Caution
-            return '#ff0044'; // Danger
+            if (val >= bm) return '#00f2ff';
+            if (val >= bm * 0.85) return '#ffea00';
+            return '#ff0044';
         } else {
-            if (val <= bm) return '#00f2ff'; // Safe
-            if (val <= bm * 1.15) return '#ffea00'; // Caution
-            return '#ff0044'; // Danger
+            if (val <= bm) return '#00f2ff';
+            if (val <= bm * 1.15) return '#ffea00';
+            return '#ff0044';
         }
     }
 
@@ -193,14 +189,21 @@ dashboard_html = """
                 type: 'bar',
                 data: {
                     labels: d.groups.map(g => g.title),
-                    datasets: [{ data: d.groups.map(g => g.items[0][1]), backgroundColor: barColors, borderRadius: 8 }]
+                    datasets: [{ data: d.groups.map(g => g.items[0][1]), backgroundColor: barColors, borderRadius: 6 }]
                 },
                 options: {
                     indexAxis: 'y', maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8', font: { size: 12 } } },
-                        y: { ticks: { color: '#fff', font: { weight: 'bold', size: 12 } } }
+                        x: { 
+                            title: { display: true, text: 'KPI VALUE', color: '#94a3b8', font: { size: 10, weight: 'bold' } },
+                            grid: { color: 'rgba(255,255,255,0.05)' }, 
+                            ticks: { color: '#94a3b8' } 
+                        },
+                        y: { 
+                            title: { display: true, text: 'BENCHMARKING INDICATORS', color: '#94a3b8', font: { size: 10, weight: 'bold' } },
+                            ticks: { color: '#fff', font: { weight: 'bold', size: 10 } } 
+                        }
                     }
                 }
             });
