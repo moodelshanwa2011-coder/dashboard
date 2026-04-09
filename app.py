@@ -1,136 +1,251 @@
 import streamlit as st
-import plotly.graph_objects as go
-import time
+import streamlit.components.v1 as components
 
-# 1. إعدادات الصفحة والتصميم (التصميم الثابت اللي طلبته)
-st.set_page_config(page_title="ICU Performance Dashboard", layout="wide", initial_sidebar_state="collapsed")
+# إعداد الصفحة لتكون بملء الشاشة وبدون هوامش
+st.set_page_config(
+    page_title="ICU Dammam | Executive Dashboard",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-st.markdown("""
+# دمج داتا الدمام المستخرجة من الملف في هيكل الـ HTML
+dashboard_html = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-    [data-testid="stAppViewContainer"] { background-color: #000000; color: #ffffff; }
-    .kpi-card {
-        position: relative; background-color: #0a0a0a; border-radius: 20px;
-        overflow: hidden; display: flex; flex-direction: column; justify-content: center;
-        text-align: center; height: 260px; margin-bottom: 20px;
-        border: 2px solid #1a1a1a; box-shadow: 0 0 20px rgba(0, 212, 255, 0.2); 
-    }
-    .kpi-card::before, .circle-container::before {
-        content: ''; position: absolute; width: 250%; height: 250%;
-        background: conic-gradient(#00d4ff, #001a1a, #00d4ff);
-        animation: rotate-wave 4s linear infinite; top: 50%; left: 50%;
-    }
-    .kpi-card::after, .circle-container::after {
-        content: ''; position: absolute; background-color: #0a0a0a; inset: 5px; border-radius: 16px;
-    }
-    .circle-container {
-        position: relative; width: 280px; height: 280px; border-radius: 50%;
-        margin: auto; overflow: hidden; display: flex; justify-content: center; align-items: center; text-align: center;
-        border: 2px solid #1a1a1a; box-shadow: 0 0 25px rgba(0, 212, 255, 0.25);
-    }
-    .circle-container::after { border-radius: 50%; inset: 10px; }
-    @keyframes rotate-wave { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
-    .content-box { position: relative; z-index: 10; width: 100%; padding: 10px; }
-    .label-full { color: #aaaaaa; font-size: 20px; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
-    .val-full { color: #00d4ff; font-size: 48px; font-weight: 900; line-height: 1; }
-    .bm-full { color: #444444; font-size: 13px; font-weight: bold; margin-top: 10px; text-transform: uppercase; }
-    .census-box-mini { background: #0a0a0a; border: 2px solid #FFD700; border-radius: 12px; padding: 10px 20px; text-align: left; margin-bottom: 15px; }
-    .census-num-mini { color: #FFD700; font-size: 38px; font-weight: 900; }
-    .side-header { color: #00d4ff; font-size: 26px; font-weight: 900; margin-bottom: 15px; text-transform: uppercase; }
-    .gauge-label-bottom { color: #ffffff; font-size: 14px; font-weight: 900; text-transform: uppercase; margin-top: -20px; text-align: center; }
+        :root {
+            --bg: #020617;
+            --card-bg: rgba(15, 23, 42, 0.8);
+            --neon-blue: #22d3ee;
+            --neon-red: #f43f5e;
+            --border-clr: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 25px;
+            overflow: hidden;
+        }
+
+        .dashboard-container { max-width: 1580px; margin: 0 auto; }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            padding: 20px 45px;
+            border-radius: 20px;
+            border: 1px solid var(--border-clr);
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .q-badge {
+            background: linear-gradient(135deg, #0891b2, #22d3ee);
+            color: #020617;
+            padding: 10px 35px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 1.4rem;
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.4);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            border-radius: 22px;
+            padding: 25px;
+            text-align: center;
+            border: 2px solid var(--border-clr);
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 25px rgba(34, 211, 238, 0.2);
+        }
+
+        .kpi-title { 
+            font-size: 0.9rem; 
+            font-weight: 700; 
+            color: var(--text-dim); 
+            text-transform: uppercase; 
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .val-large {
+            font-size: 3.2rem;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .safe { color: var(--neon-blue); text-shadow: 0 0 15px rgba(34, 211, 238, 0.4); }
+        .alert { color: var(--neon-red); text-shadow: 0 0 15px rgba(244, 63, 94, 0.4); }
+
+        .bm-container {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #475569;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px 15px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .bottom-section {
+            display: grid;
+            grid-template-columns: 2fr 1.1fr;
+            gap: 25px;
+            height: 380px;
+        }
+
+        .glass-panel {
+            background: var(--card-bg);
+            border-radius: 25px;
+            padding: 30px;
+            border: 1px solid var(--border-clr);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .score-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 12px solid #1e293b;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 1s ease;
+        }
+
+        .score-num { font-size: 4rem; font-weight: 900; line-height: 1; }
+        .score-txt { font-size: 1.1rem; font-weight: 700; color: var(--text-dim); margin-top: 15px; }
     </style>
-    """, unsafe_allow_html=True)
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <div>
+                <h1 style="margin:0; font-size:1.8rem; letter-spacing:1px;">ICU <span style="color:var(--neon-blue)">DAMMAM</span> TRACKER</h1>
+                <p style="margin:5px 0 0 0; color:var(--text-dim); font-weight:600;">SAUDI GERMAN HEALTH | 3FGW-DAMMAM</p>
+            </div>
+            <div class="q-badge" id="qLabel">1Q 2024</div>
+        </div>
 
-# 2. الداتا المستخرجة من ملف الدمام (3FGW-Dammam)
-if 'step' not in st.session_state: st.session_state.step = 0
+        <div class="grid" id="kpiGrid"></div>
 
-dammam_data = [
-    {
-        "q": "1Q 2024",
-        "sq": [0.42, 0.00, 4.38, 0.00, 0.00, 0.00], "sq_bm": [0.35, 0.12, 7.38, 1.25, 0.88, 1.34],
-        "cir": [0.00, 0.00, 6.47, 85.00, 0.00], "cir_bm": [0.11, 0.04, 7.00, 78.50, 0.15]
-    },
-    {
-        "q": "2Q 2024",
-        "sq": [0.00, 0.00, 6.41, 2.01, 0.00, 0.00], "sq_bm": [0.64, 0.00, 7.38, 1.30, 0.90, 1.40],
-        "cir": [2.00, 0.00, 7.15, 82.00, 0.11], "cir_bm": [0.35, 0.02, 6.80, 80.00, 0.10]
-    },
-    {
-        "q": "3Q 2024",
-        "sq": [1.12, 0.17, 4.52, 0.00, 3.33, 0.00], "sq_bm": [0.45, 0.00, 6.41, 1.15, 0.75, 1.20],
-        "cir": [9.00, 0.01, 4.79, 75.00, 0.00], "cir_bm": [0.37, 0.00, 7.10, 83.00, 0.12]
-    },
-    {
-        "q": "4Q 2024",
-        "sq": [2.09, 0.00, 3.33, 0.00, 7.15, 0.00], "sq_bm": [0.35, 0.08, 4.52, 1.10, 0.80, 1.25],
-        "cir": [0.00, 0.01, 7.02, 88.00, 0.01], "cir_bm": [0.37, 0.02, 7.00, 85.00, 0.05]
-    },
-    {
-        "q": "3Q 2025",
-        "sq": [0.10, 0.00, 6.89, 0.00, 7.40, 0.00], "sq_bm": [0.43, 0.10, 3.33, 1.20, 0.85, 1.30],
-        "cir": [4.00, 0.01, 6.89, 90.00, 0.00], "cir_bm": [0.40, 0.01, 7.15, 84.00, 0.08]
-    }
-]
+        <div class="bottom-section">
+            <div class="glass-panel">
+                <canvas id="barChartCanvas"></canvas>
+            </div>
+            <div class="glass-panel">
+                <div class="score-circle" id="circleBorder">
+                    <div class="score-num" id="scoreVal">0%</div>
+                </div>
+                <div class="score-txt">OVERALL SAFETY SCORE</div>
+                <p style="color:#475569; font-size:0.75rem; margin-top:10px;">Dammam Branch Performance Data</p>
+            </div>
+        </div>
+    </div>
 
-device_weeks = [
-    {"w": "Week 1", "census": 20, "occ": "70%", "vals": [10, 14, 3, 4.0]},
-    {"w": "Week 2", "census": 24, "occ": "85%", "vals": [12, 16, 5, 4.2]},
-    {"w": "Week 3", "census": 22, "occ": "78%", "vals": [11, 15, 4, 3.8]}
-]
+    <script>
+        // داتا الدمام (Dammam ICU Data) المستخرجة من ملف PDF
+        const clinicalData = [
+            { q: "1Q 2024", v: [0.42, 0.00, 4.38, 0.00, 0.00, 0.00, 85.0, 7.38], b: [0.35, 0.12, 7.00, 1.25, 0.88, 1.34, 78.5, 7.00] },
+            { q: "2Q 2024", v: [0.00, 0.00, 7.15, 2.01, 0.00, 0.00, 82.0, 6.41], b: [0.64, 0.00, 6.80, 1.30, 0.90, 1.40, 80.0, 7.38] },
+            { q: "3Q 2024", v: [1.12, 0.17, 4.79, 0.00, 3.33, 0.00, 75.0, 6.41], b: [0.45, 0.00, 7.10, 1.15, 0.75, 1.20, 83.0, 7.10] },
+            { q: "4Q 2024", v: [2.09, 0.00, 7.02, 0.00, 7.15, 0.00, 88.0, 4.52], b: [0.35, 0.08, 7.00, 1.10, 0.80, 1.25, 85.0, 7.00] },
+            { q: "3Q 2025", v: [0.10, 0.00, 6.89, 0.00, 7.40, 0.00, 90.0, 3.33], b: [0.43, 0.10, 7.15, 1.20, 0.85, 1.30, 84.0, 7.15] }
+        ];
 
-cur_q = dammam_data[st.session_state.step % len(dammam_data)]
-cur_d = device_weeks[st.session_state.step % len(device_weeks)]
+        const kpis = ["Falls", "Injury Falls", "Nursing Hr", "CLABSI", "CAUTI", "VAE", "RN Edu %", "Total Hr"];
+        let step = 0; let mainChart;
 
-# --- العرض العلوي (Dammam PDF Data) ---
-st.markdown(f"<h1 style='text-align: center; color: #00d4ff; font-size: 50px; font-weight:900;'>3FGW-DAMMAM PERFORMANCE</h1>", unsafe_allow_html=True)
-st.markdown(f"<p style='text-align: center; color: #FFD700; font-size: 22px; font-weight:bold;'>PERIOD: {cur_q['q']}</p>", unsafe_allow_html=True)
+        function update() {
+            const current = clinicalData[step];
+            document.getElementById('qLabel').innerText = current.q;
+            const grid = document.getElementById('kpiGrid');
+            grid.innerHTML = '';
+            let met = 0;
 
-sq_names = ["Falls", "Injury Falls", "HAPI %", "CLABSI", "CAUTI", "VAE Rate"]
-c1 = st.columns(6)
-for i in range(6):
-    v, b = cur_q['sq'][i], cur_q['sq_bm'][i]
-    color = "#00ffaa" if v <= b else "#ff4b4b"
-    with c1[i]:
-        st.markdown(f'<div class="kpi-card"><div class="content-box"><div class="label-full">{sq_names[i]}</div><div class="val-full" style="color:{color}">{v}</div><div class="bm-full">BENCHMARK: {b}</div></div></div>', unsafe_allow_html=True)
+            current.v.forEach((val, i) => {
+                // منطق المؤشرات: (Falls/CLABSI الخ) الأقل أفضل، (Education/Nursing) الأعلى أفضل
+                const isPositiveKPI = (i === 2 || i === 6 || i === 7); 
+                const isBad = isPositiveKPI ? (val < current.b[i]) : (val > current.b[i]);
+                
+                const cls = isBad ? 'alert' : 'safe';
+                if(!isBad) met++;
+                
+                grid.innerHTML += `
+                    <div class="kpi-card">
+                        <div class="kpi-title">${kpis[i]}</div>
+                        <div class="val-large ${cls}">${val}</div>
+                        <div class="bm-container">Benchmark: ${current.b[i]}</div>
+                    </div>`;
+            });
 
-st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
-cir_names = ["Assault Rate", "Injury Assault", "Nursing Hr", "RN Education", "C-Diff"]
-c2 = st.columns(5)
-for i in range(5):
-    v, b = cur_q['cir'][i], cur_q['cir_bm'][i]
-    # التحقق من نوع المؤشر (إيجابي أم سلبي)
-    is_positive = "Education" in cir_names[i] or "Nursing Hr" in cir_names[i]
-    color = "#00ffaa" if (v >= b if is_positive else v <= b) else "#ff4b4b"
-    with c2[i]:
-        st.markdown(f'<div class="circle-container"><div class="content-box"><div class="label-full" style="font-size:18px;">{cir_names[i]}</div><div class="val-full" style="color:{color}; font-size:42px;">{v}</div><div class="bm-full">BENCHMARK: {b}</div></div></div>', unsafe_allow_html=True)
+            const score = Math.round((met/8)*100);
+            const scoreEl = document.getElementById('scoreVal');
+            const ring = document.getElementById('circleBorder');
+            
+            scoreEl.innerText = score + "%";
+            const color = score >= 75 ? "#22d3ee" : "#f43f5e";
+            scoreEl.style.color = color;
+            ring.style.borderColor = color;
+            ring.style.boxShadow = `0 0 35px ${color}44`;
 
-st.markdown("<hr style='border-color:#222; margin:40px 0;'>", unsafe_allow_html=True)
+            if(!mainChart) {
+                const ctx = document.getElementById('barChartCanvas').getContext('2d');
+                mainChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: { 
+                        labels: kpis, 
+                        datasets: [{ data: current.v, backgroundColor: '#22d3ee', borderRadius: 6, barThickness: 25 }] 
+                    },
+                    options: { 
+                        maintainAspectRatio: false, 
+                        plugins: { legend: { display: false } },
+                        scales: { 
+                            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                            x: { ticks: { color: '#f8fafc', font: { weight: 'bold' } } }
+                        }
+                    }
+                });
+            } else {
+                mainChart.data.datasets[0].data = current.v;
+                mainChart.update();
+            }
+            step = (step + 1) % clinicalData.length;
+        }
+        update(); setInterval(update, 8000); // تحديث كل 8 ثوانٍ بنفس وتيرة تصميمك
+    </script>
+</body>
+</html>
+"""
 
-# --- العرض السفلي (حركة أسبوعية مستقلة) ---
-col_l, col_r = st.columns([2.2, 1.8])
-with col_l:
-    s1, s2 = st.columns(2)
-    with s1: st.markdown(f'<div class="census-box-mini"><div style="color:#555; font-size:12px; font-weight:bold;">CURRENT CENSUS</div><div class="census-num-mini">{cur_d["census"]}</div></div>', unsafe_allow_html=True)
-    with s2: st.markdown(f'<div class="census-box-mini" style="border-color:#00d4ff;"><div style="color:#555; font-size:12px; font-weight:bold;">OCCUPANCY RATE</div><div class="census-num-mini" style="color:#00d4ff;">{cur_d["occ"]}</div></div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="side-header">ATTACHED DEVICES <span style="color:#FFD700; font-size:16px;">({cur_d["w"]})</span></div>', unsafe_allow_html=True)
-    g_cols = st.columns(4)
-    dev_info = [("Pt with ETT", 30, [8, 15]), ("Pt with Foley", 30, [20, 25]), ("Pt with CVC", 30, [10, 20]), ("Avg Stay", 10, [4, 6])]
-    for i, (n, mx, stps) in enumerate(dev_info):
-        with g_cols[i]:
-            fig = go.Figure(go.Indicator(mode="gauge+number", value=cur_d['vals'][i], number={'font':{'size':35,'color':'#fff'}},
-                gauge={'axis':{'range':[None,mx],'tickvals':[]},'bar':{'color':"#222"},'bgcolor':"#000",
-                'steps':[{'range':[0,stps[0]],'color':"#00ffaa"},{'range':[stps[0],stps[1]],'color':"#FFD700"},{'range':[stps[1],mx],'color':"#ff4b4b"}]}))
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(t=10,b=0,l=10,r=10), height=120)
-            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar':False})
-            st.markdown(f'<div class="gauge-label-bottom">{n}</div>', unsafe_allow_html=True)
-
-with col_r:
-    st.markdown('<div class="side-header" style="margin-left:20px;">TREND ANALYSIS</div>', unsafe_allow_html=True)
-    fig_bar = go.Figure()
-    fig_bar.add_trace(go.Bar(x=sq_names, y=cur_q['sq'], name="Unit", marker_color='#00d4ff', text=cur_q['sq'], textposition='outside'))
-    fig_bar.add_trace(go.Bar(x=sq_names, y=cur_q['sq_bm'], name="Mean", marker_color='#1a1a1a'))
-    fig_bar.update_layout(height=400, barmode='group', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(t=20,b=20,l=0,r=0), legend=dict(font=dict(color="#888"), orientation="h", y=1.2))
-    st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar':False})
-
-time.sleep(15)
-st.session_state.step += 1
-st.rerun()
+components.html(dashboard_html, height=1000, scrolling=False)
