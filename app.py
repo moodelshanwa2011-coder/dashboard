@@ -5,22 +5,22 @@ import time
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="ICU Dashboard", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. CSS المطور - أعمدة ملونة ومنع الوميض
+# 2. CSS المعتمد - أعمدة ملونة وثبات التصميم
 st.markdown("""
     <style>
     [data-testid="stAppViewContainer"] { background-color: #000000; color: #ffffff; }
     
-    /* أعمدة موسيقية ملونة */
+    /* أعمدة موسيقية ملونة نيون */
     .visualizer {
         position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
-        display: flex; gap: 4px; height: 35px; align-items: flex-end; z-index: 5; opacity: 0.6;
+        display: flex; gap: 4px; height: 35px; align-items: flex-end; z-index: 5; opacity: 0.7;
     }
     .v-bar { width: 4px; border-radius: 2px; animation: bounce 1s ease-in-out infinite; }
-    .v-bar:nth-child(1) { background: #ff00ff; animation-delay: 0.1s; }
-    .v-bar:nth-child(2) { background: #00d4ff; animation-delay: 0.3s; }
-    .v-bar:nth-child(3) { background: #FFD700; animation-delay: 0.2s; }
-    .v-bar:nth-child(4) { background: #00ffaa; animation-delay: 0.4s; }
-    .v-bar:nth-child(5) { background: #ff4b4b; animation-delay: 0.1s; }
+    .v-bar:nth-child(1) { background: #ff00ff; animation-delay: 0.1s; } /* فوشيا */
+    .v-bar:nth-child(2) { background: #00d4ff; animation-delay: 0.3s; } /* أزرق نيون */
+    .v-bar:nth-child(3) { background: #FFD700; animation-delay: 0.2s; } /* ذهبي */
+    .v-bar:nth-child(4) { background: #00ffaa; animation-delay: 0.4s; } /* أخضر نيون */
+    .v-bar:nth-child(5) { background: #ff4b4b; animation-delay: 0.1s; } /* أحمر */
     
     @keyframes bounce { 0%, 100% { height: 30%; } 50% { height: 100%; } }
 
@@ -58,9 +58,10 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+# أيقونة الأعمدة الموسيقية الملونة
 m_bars = '<div class="visualizer"><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div></div>'
 
-# 3. إدارة البيانات - الترتيب تصاعدي
+# 3. إدارة البيانات - الترتيب تصاعدي (3Q 2024 ثم 1Q 2025)
 if 'step' not in st.session_state: st.session_state.step = 0
 
 pdf_quarters = [
@@ -75,7 +76,7 @@ device_weeks = [{"w": "Week 1", "census": 23, "occ": "78%", "vals": [12, 16, 4, 
 cur_pdf = pdf_quarters[st.session_state.step % len(pdf_quarters)]
 cur_dev = device_weeks[st.session_state.step % len(device_weeks)]
 
-# --- العرض الرئيسي ---
+# --- العرض ---
 st.markdown(f"<h1 style='text-align: center; color: #00d4ff; font-size: 50px; font-weight:900;'>ICU DASHBOARD</h1>", unsafe_allow_html=True)
 st.markdown(f"<p style='text-align: center; color: #FFD700; font-size: 20px; font-weight:bold;'>QUARTERLY PERFORMANCE: {cur_pdf['q']}</p>", unsafe_allow_html=True)
 
@@ -131,7 +132,7 @@ with col_right:
     fig_bar.update_layout(height=400, barmode='group', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(t=20, b=20, l=0, r=0), legend=dict(font=dict(color="#888"), orientation="h", y=1.2))
     st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
 
-# التحديث الهادئ لتقليل الوميض
+# تحديث تلقائي كل 15 ثانية لمواكبة التغيير
 time.sleep(15)
 st.session_state.step += 1
 st.rerun()
