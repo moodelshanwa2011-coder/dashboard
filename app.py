@@ -68,7 +68,6 @@ dashboard_html = """
 
         .footer { display: grid; grid-template-columns: 2.8fr 1.2fr; gap: 20px; height: 350px; }
 
-        /* تصغير حجم دايرة السيفتي */
         .ring-container { position: relative; width: 160px; height: 160px; margin: auto; }
         .ring-text { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
@@ -87,7 +86,7 @@ dashboard_html = """
 <body>
 
 <div class="header">
-    <div style="font-size: 1.4rem; font-weight: 900;">SGH RIYADH <span style="color:var(--safe-blue)">| COMMAND CENTER</span></div>
+    <div style="font-size: 1.4rem; font-weight: 900; letter-spacing: 2px;">SGH RIYADH <span style="color:var(--safe-blue)">| ICU PRO MONITOR</span></div>
     <div id="qLabel" style="background: var(--safe-blue); color: #000; padding: 6px 25px; border-radius: 8px; font-weight: 900; font-size: 1.1rem;">...</div>
 </div>
 
@@ -126,7 +125,7 @@ dashboard_html = """
                 { id: "staff", title: "Workforce", items: [["BSN %", 67.2, 83.5]] },
                 { id: "restr", title: "Restraints Control", items: [["Restraints", 23.3, 5.08]] },
                 { id: "hours", title: "Nursing Hours", class: "span-2", items: [["RN Hours", 13.0, 8.0], ["CNA Hours", 1.1, 1.2]] },
-                { id: "skin", title: "Pressure Injuries", items: [["Skin Health", 7.3, 26.6]] }
+                { id: "skin", title: "Pressure Injuries", items: [["Pressure Injuries", 7.3, 26.6]] }
             ]
         },
         {
@@ -137,7 +136,7 @@ dashboard_html = """
                 { id: "staff", title: "Workforce", items: [["BSN %", 83.0, 70.3]] },
                 { id: "restr", title: "Restraints Control", items: [["Restraints", 6.45, 6.47]] },
                 { id: "hours", title: "Nursing Hours", class: "span-2", items: [["RN Hours", 20.1, 19.1], ["CNA Hours", 1.5, 1.3]] },
-                { id: "skin", title: "Pressure Injuries", items: [["Skin Health", 6.45, 7.77]] }
+                { id: "skin", title: "Pressure Injuries", items: [["Pressure Injuries", 6.45, 7.77]] }
             ]
         }
     ];
@@ -196,14 +195,14 @@ dashboard_html = """
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        y: { 
+                        x: { 
                             title: { display: true, text: 'KPI VALUE', color: '#94a3b8', font: { weight: 'bold' } },
+                            ticks: { color: '#fff', font: { weight: 'bold', size: 10 } } 
+                        },
+                        y: { 
+                            title: { display: true, text: 'BENCHMARKING INDICATORS', color: '#94a3b8', font: { weight: 'bold' } },
                             grid: { color: 'rgba(255,255,255,0.05)' }, 
                             ticks: { color: '#94a3b8' } 
-                        },
-                        x: { 
-                            title: { display: true, text: 'BENCHMARKING INDICATORS', color: '#94a3b8', font: { weight: 'bold' } },
-                            ticks: { color: '#fff', font: { weight: 'bold', size: 10 } } 
                         }
                     }
                 }
