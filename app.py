@@ -9,19 +9,16 @@ st.set_page_config(page_title="ICU Dashboard", layout="wide", initial_sidebar_st
 st.markdown("""
     <style>
     [data-testid="stAppViewContainer"] { background-color: #000000; color: #ffffff; }
-    
-    /* أعمدة موسيقية ملونة نيون */
     .visualizer {
         position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
         display: flex; gap: 4px; height: 35px; align-items: flex-end; z-index: 5; opacity: 0.7;
     }
     .v-bar { width: 4px; border-radius: 2px; animation: bounce 1s ease-in-out infinite; }
-    .v-bar:nth-child(1) { background: #ff00ff; animation-delay: 0.1s; } /* فوشيا */
-    .v-bar:nth-child(2) { background: #00d4ff; animation-delay: 0.3s; } /* أزرق نيون */
-    .v-bar:nth-child(3) { background: #FFD700; animation-delay: 0.2s; } /* ذهبي */
-    .v-bar:nth-child(4) { background: #00ffaa; animation-delay: 0.4s; } /* أخضر نيون */
-    .v-bar:nth-child(5) { background: #ff4b4b; animation-delay: 0.1s; } /* أحمر */
-    
+    .v-bar:nth-child(1) { background: #ff00ff; animation-delay: 0.1s; }
+    .v-bar:nth-child(2) { background: #00d4ff; animation-delay: 0.3s; }
+    .v-bar:nth-child(3) { background: #FFD700; animation-delay: 0.2s; }
+    .v-bar:nth-child(4) { background: #00ffaa; animation-delay: 0.4s; }
+    .v-bar:nth-child(5) { background: #ff4b4b; animation-delay: 0.1s; }
     @keyframes bounce { 0%, 100% { height: 30%; } 50% { height: 100%; } }
 
     .kpi-card, .circle-container {
@@ -31,7 +28,6 @@ st.markdown("""
     }
     .kpi-card { height: 260px; margin-bottom: 20px; }
     .circle-container { width: 280px; height: 280px; border-radius: 50%; margin: auto; }
-
     .kpi-card::before, .circle-container::before {
         content: ''; position: absolute; width: 250%; height: 250%;
         background: conic-gradient(#00d4ff, #001a1a, #00d4ff);
@@ -41,14 +37,11 @@ st.markdown("""
         content: ''; position: absolute; background-color: #0a0a0a; inset: 5px; border-radius: 16px;
     }
     .circle-container::after { border-radius: 50%; inset: 10px; }
-    
     @keyframes rotate-wave { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
-    
     .content-box { position: relative; z-index: 10; width: 100%; padding: 10px; }
     .label-full { color: #aaaaaa; font-size: 22px; font-weight: 900; text-transform: uppercase; }
     .val-full { color: #00d4ff; font-size: 50px; font-weight: 900; line-height: 1; }
     .bm-full { color: #444444; font-size: 14px; font-weight: bold; margin-top: 10px; text-transform: uppercase; }
-    
     .census-box-mini { 
         position: relative; background: #0a0a0a; border: 2px solid #FFD700; border-radius: 12px; 
         padding: 10px 20px; text-align: left; margin-bottom: 15px; overflow: hidden;
@@ -58,12 +51,12 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# أيقونة الأعمدة الموسيقية الملونة
 m_bars = '<div class="visualizer"><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div></div>'
 
-# 3. إدارة البيانات - الترتيب تصاعدي (3Q 2024 ثم 1Q 2025)
+# 3. إدارة البيانات
 if 'step' not in st.session_state: st.session_state.step = 0
 
+# الجزء العلوي - ترتيب تصاعدي (لا تغيير)
 pdf_quarters = [
     {"q": "3Q 2024", "sq": [0.36, 0.36, 6.90, 2.63, 1.02, 0.00], "sq_bm": [0.28, 0.05, 4.60, 1.20, 0.40, 1.89],
      "cir": [20.69, 0.00, 4.69, 12.54, 68.25, 0.00], "cir_bm": [6.32, 1.89, 4.51, 19.20, 83.36, 0.25]},
@@ -71,7 +64,13 @@ pdf_quarters = [
      "cir": [12.50, 6.69, 1.43, 12.87, 70.00, 0.00], "cir_bm": [8.23, 1.91, 3.97, 19.15, 83.78, 0.26]}
 ]
 
-device_weeks = [{"w": "Week 1", "census": 23, "occ": "78%", "vals": [12, 16, 4, 3.5]}, {"w": "Week 2", "census": 28, "occ": "93%", "vals": [11, 15, 6, 4.5]}]
+# الجزء السفلي - ترتيب تدريجي من مارس حتى أبريل (بناءً على الصور)
+# الأرقام مستخلصة من إجماليات الصور (Total March vs April Day 1)
+device_weeks = [
+    {"w": "Week 1 March", "census": 34, "occ": "85%", "vals": [7, 14, 14, 4.2]}, # مستخلص من بيانات الصورة (Day 1 March)
+    {"w": "Week 2 March", "census": 25, "occ": "78%", "vals": [4, 15, 12, 4.8]}, # مستخلص من بيانات الصورة (Day 4 March)
+    {"w": "Week 1 April", "census": 16, "occ": "68%", "vals": [1, 8, 6, 3.8]}   # مستخلص من بيانات الصورة (Day 1 April)
+]
 
 cur_pdf = pdf_quarters[st.session_state.step % len(pdf_quarters)]
 cur_dev = device_weeks[st.session_state.step % len(device_weeks)]
@@ -132,7 +131,6 @@ with col_right:
     fig_bar.update_layout(height=400, barmode='group', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(t=20, b=20, l=0, r=0), legend=dict(font=dict(color="#888"), orientation="h", y=1.2))
     st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
 
-# تحديث تلقائي كل 15 ثانية لمواكبة التغيير
 time.sleep(15)
 st.session_state.step += 1
 st.rerun()
