@@ -5,7 +5,7 @@ import time
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="ICU Dashboard", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. CSS - التصميم المعتمد (ثابت تماماً)
+# 2. CSS - التصميم المعتمد بدون أي تغيير
 st.markdown("""
     <style>
     [data-testid="stAppViewContainer"] { background-color: #000000; color: #ffffff; }
@@ -53,29 +53,30 @@ st.markdown("""
 
 m_bars = '<div class="visualizer"><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div></div>'
 
-# 3. إدارة البيانات - الترتيب التصاعدي (التدريجي للأمام)
-if 'step' not in st.session_state: st.session_state.step = 0
+# 3. منطق الترتيب التدريجي (Time-Forward Logic)
+if 'count' not in st.session_state:
+    st.session_state.count = 0
 
-# الفصول مرتبة زمنياً: من 2024 لـ 2025
-pdf_data = [
+# قائمة الـ Quarters (مرتبة زمنياً للأمام)
+pdf_timeline = [
     {"q": "3Q 2024", "sq": [0.36, 0.36, 6.90, 2.63, 1.02, 0.00], "sq_bm": [0.28, 0.05, 4.60, 1.20, 0.40, 1.89],
      "cir": [20.69, 0.00, 4.69, 12.54, 68.25, 0.00], "cir_bm": [6.32, 1.89, 4.51, 19.20, 83.36, 0.25]},
     {"q": "1Q 2025", "sq": [1.59, 0.80, 4.17, 3.02, 0.00, 6.69], "sq_bm": [0.12, 0.03, 4.96, 1.26, 0.43, 1.91],
      "cir": [12.50, 6.69, 1.43, 12.87, 70.00, 0.00], "cir_bm": [8.23, 1.91, 3.97, 19.15, 83.78, 0.26]}
 ]
 
-# الأسابيع مرتبة زمنياً: مارس أولاً ثم أبريل
-device_data = [
+# قائمة الأسابيع (مرتبة زمنياً للأمام)
+device_timeline = [
     {"w": "Week 1 March", "census": 34, "occ": "85%", "vals": [7, 14, 14, 4.2]},
     {"w": "Week 2 March", "census": 25, "occ": "78%", "vals": [4, 15, 12, 4.8]},
     {"w": "Week 1 April", "census": 16, "occ": "68%", "vals": [1, 8, 6, 3.8]}
 ]
 
-# الاختيار بناءً على العداد
-cur_pdf = pdf_data[st.session_state.step % len(pdf_data)]
-cur_dev = device_data[st.session_state.step % len(device_data)]
+# اختيار البيانات الحالية بناءً على العداد
+cur_pdf = pdf_timeline[st.session_state.count % len(pdf_timeline)]
+cur_dev = device_timeline[st.session_state.count % len(device_timeline)]
 
-# --- العرض ---
+# --- واجهة العرض ---
 st.markdown(f"<h1 style='text-align: center; color: #00d4ff; font-size: 50px; font-weight:900;'>ICU DASHBOARD</h1>", unsafe_allow_html=True)
 st.markdown(f"<p style='text-align: center; color: #FFD700; font-size: 20px; font-weight:bold;'>QUARTERLY PERFORMANCE: {cur_pdf['q']}</p>", unsafe_allow_html=True)
 
@@ -131,7 +132,7 @@ with col_right:
     fig_bar.update_layout(height=400, barmode='group', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(t=20, b=20, l=0, r=0), legend=dict(font=dict(color="#888"), orientation="h", y=1.2))
     st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
 
-# التحديث كل 10 ثوانٍ بالثانية
+# التحديث كل 10 ثوانٍ (زيادة العداد تلقائياً للأمام)
 time.sleep(10)
-st.session_state.step += 1
+st.session_state.count += 1
 st.rerun()
