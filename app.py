@@ -5,7 +5,7 @@ import time
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="ICU Dashboard", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. CSS المعتمد - أعمدة ملونة وثبات التصميم
+# 2. CSS - الأعمدة الملونة والتصميم الثابت
 st.markdown("""
     <style>
     [data-testid="stAppViewContainer"] { background-color: #000000; color: #ffffff; }
@@ -39,7 +39,7 @@ st.markdown("""
     .circle-container::after { border-radius: 50%; inset: 10px; }
     @keyframes rotate-wave { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
     .content-box { position: relative; z-index: 10; width: 100%; padding: 10px; }
-    .label-full { color: #aaaaaa; font-size: 22px; font-weight: 900; text-transform: uppercase; }
+    .label-full { color: #aaaaaa; font-size: 20px; font-weight: 900; text-transform: uppercase; }
     .val-full { color: #00d4ff; font-size: 50px; font-weight: 900; line-height: 1; }
     .bm-full { color: #444444; font-size: 14px; font-weight: bold; margin-top: 10px; text-transform: uppercase; }
     .census-box-mini { 
@@ -56,24 +56,24 @@ m_bars = '<div class="visualizer"><div class="v-bar"></div><div class="v-bar"></
 # 3. إدارة البيانات
 if 'step' not in st.session_state: st.session_state.step = 0
 
-# الجزء العلوي - ترتيب تصاعدي (لا تغيير)
-pdf_quarters = [
+# --- بيانات الجزء العلوي والبار (PDF) ---
+pdf_data = [
     {"q": "3Q 2024", "sq": [0.36, 0.36, 6.90, 2.63, 1.02, 0.00], "sq_bm": [0.28, 0.05, 4.60, 1.20, 0.40, 1.89],
      "cir": [20.69, 0.00, 4.69, 12.54, 68.25, 0.00], "cir_bm": [6.32, 1.89, 4.51, 19.20, 83.36, 0.25]},
     {"q": "1Q 2025", "sq": [1.59, 0.80, 4.17, 3.02, 0.00, 6.69], "sq_bm": [0.12, 0.03, 4.96, 1.26, 0.43, 1.91],
      "cir": [12.50, 6.69, 1.43, 12.87, 70.00, 0.00], "cir_bm": [8.23, 1.91, 3.97, 19.15, 83.78, 0.26]}
 ]
 
-# الجزء السفلي - ترتيب تدريجي من مارس حتى أبريل (بناءً على الصور)
-# الأرقام مستخلصة من إجماليات الصور (Total March vs April Day 1)
-device_weeks = [
-    {"w": "Week 1 March", "census": 34, "occ": "85%", "vals": [7, 14, 14, 4.2]}, # مستخلص من بيانات الصورة (Day 1 March)
-    {"w": "Week 2 March", "census": 25, "occ": "78%", "vals": [4, 15, 12, 4.8]}, # مستخلص من بيانات الصورة (Day 4 March)
-    {"w": "Week 1 April", "census": 16, "occ": "68%", "vals": [1, 8, 6, 3.8]}   # مستخلص من بيانات الصورة (Day 1 April)
+# --- بيانات جزء الأجهزة (صور الإكسيل) ---
+device_data = [
+    {"w": "Week 1 March", "census": 34, "occ": "85%", "vals": [7, 14, 14, 4.2]},
+    {"w": "Week 2 March", "census": 25, "occ": "78%", "vals": [4, 15, 12, 4.8]},
+    {"w": "Week 1 April", "census": 16, "occ": "68%", "vals": [1, 8, 6, 3.8]}
 ]
 
-cur_pdf = pdf_quarters[st.session_state.step % len(pdf_quarters)]
-cur_dev = device_weeks[st.session_state.step % len(device_weeks)]
+# اختيار البيانات بناءً على الخطوة الحالية
+cur_pdf = pdf_data[st.session_state.step % len(pdf_data)]
+cur_dev = device_data[st.session_state.step % len(device_data)]
 
 # --- العرض ---
 st.markdown(f"<h1 style='text-align: center; color: #00d4ff; font-size: 50px; font-weight:900;'>ICU DASHBOARD</h1>", unsafe_allow_html=True)
@@ -95,7 +95,7 @@ for i in range(6):
     is_rev = any(x in cir_names[i] for x in ["Hr", "Edu"])
     color = "#00ffaa" if (v >= b if is_rev else v <= b) else "#ff4b4b"
     with c2[i]:
-        st.markdown(f'<div class="circle-container">{m_bars}<div class="content-box"><div class="label-full" style="font-size:18px;">{cir_names[i]}</div><div class="val-full" style="color:{color}; font-size:42px;">{v}</div><div class="bm-full">BENCHMARK: {b}</div></div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="circle-container">{m_bars}<div class="content-box"><div class="label-full" style="font-size:16px;">{cir_names[i]}</div><div class="val-full" style="color:{color}; font-size:42px;">{v}</div><div class="bm-full">BENCHMARK: {b}</div></div></div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='border-color:#111; margin:40px 0;'>", unsafe_allow_html=True)
 
@@ -124,13 +124,15 @@ with col_left:
             st.markdown(f'</div><div class="gauge-label-bottom">{name}</div>', unsafe_allow_html=True)
 
 with col_right:
-    st.markdown('<div class="side-header" style="margin-left:20px;">PERFORMANCE ANALYTICS</div>', unsafe_allow_html=True)
+    # البار مرتبط ببيانات الـ PDF العلوية
+    st.markdown(f'<div class="side-header" style="margin-left:20px;">PERFORMANCE ANALYTICS ({cur_pdf["q"]})</div>', unsafe_allow_html=True)
     fig_bar = go.Figure()
     fig_bar.add_trace(go.Bar(x=sq_names, y=cur_pdf['sq'], name="Current", marker_color='#00d4ff'))
     fig_bar.add_trace(go.Bar(x=sq_names, y=cur_pdf['sq_bm'], name="Benchmark", marker_color='#1a1a1a'))
     fig_bar.update_layout(height=400, barmode='group', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(t=20, b=20, l=0, r=0), legend=dict(font=dict(color="#888"), orientation="h", y=1.2))
     st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
 
-time.sleep(15)
+# التحديث كل 10 ثوانٍ
+time.sleep(10)
 st.session_state.step += 1
 st.rerun()
