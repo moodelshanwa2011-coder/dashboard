@@ -5,7 +5,7 @@ import time
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="ICU Dashboard", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. CSS - التصميم المعتمد
+# 2. CSS - التصميم المعتمد مع حل مشكلة الوميض
 st.markdown("""
     <style>
     [data-testid="stAppViewContainer"] { background-color: #000000; color: #ffffff; }
@@ -38,25 +38,34 @@ st.markdown("""
     }
     .circle-container::after { border-radius: 50%; inset: 10px; }
     @keyframes rotate-wave { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+    
     .content-box { position: relative; z-index: 10; width: 100%; padding: 10px; }
     .label-full { color: #aaaaaa; font-size: 20px; font-weight: 900; text-transform: uppercase; }
     .val-full { color: #00d4ff; font-size: 50px; font-weight: 900; line-height: 1; }
     .bm-full { color: #444444; font-size: 14px; font-weight: bold; margin-top: 10px; text-transform: uppercase; }
+    
     .census-box-mini { 
         position: relative; background: #0a0a0a; border: 2px solid #FFD700; border-radius: 12px; 
         padding: 10px 20px; text-align: left; margin-bottom: 15px; overflow: hidden;
     }
     .side-header { color: #00d4ff; font-size: 26px; font-weight: 900; margin-bottom: 15px; text-transform: uppercase; }
-    .gauge-label-bottom { color: #ffffff; font-size: 14px; font-weight: 900; text-transform: uppercase; margin-top: -20px; text-align: center; }
+    
+    /* ستايل مخصص للعدادات بدون وميض */
+    .device-gauge-box {
+        background: #0a0a0a; border-radius: 15px; padding: 15px; text-align: center;
+        border: 1px solid #1a1a1a; height: 140px; display: flex; flex-direction: column; justify-content: center;
+    }
+    .device-val { color: #ffffff; font-size: 36px; font-weight: 900; }
+    .device-label { color: #555; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-top: 5px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
     </style>
     """, unsafe_allow_html=True)
 
 m_bars = '<div class="visualizer"><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div></div>'
 
-# 3. إدارة التوقيت (تزامن كامل كل 10 ثوانٍ)
+# 3. إدارة البيانات والتوقيت (10 ثوانٍ للكل)
 if 'step' not in st.session_state: st.session_state.step = 0
 
-# بيانات الـ Quarters (من الجدول الكبير)
 pdf_timeline = [
     {"q": "4Q 2023", "sq": [0.0, 0.0, 3.85, 1.25, 0.5, 0.0], "sq_bm": [0.04, 0.03, 4.2, 1.15, 0.38, 1.8], "cir": [15.2, 0.0, 5.21, 10.5, 67.19, 0.0], "cir_bm": [5.5, 1.8, 4.8, 18.5, 83.53, 0.2]},
     {"q": "1Q 2024", "sq": [0.24, 0.0, 4.5, 1.1, 0.45, 0.11], "sq_bm": [0.09, 0.04, 4.3, 1.18, 0.42, 1.85], "cir": [18.4, 0.11, 4.84, 11.2, 82.99, 0.16], "cir_bm": [6.1, 1.85, 4.49, 18.9, 70.31, 0.22]},
@@ -66,7 +75,6 @@ pdf_timeline = [
     {"q": "1Q 2025", "sq": [1.59, 0.8, 4.17, 3.02, 0.0, 6.69], "sq_bm": [0.12, 0.03, 4.96, 1.26, 0.43, 1.91], "cir": [12.5, 6.69, 1.43, 12.87, 70.0, 0.0], "cir_bm": [8.23, 1.91, 3.97, 19.15, 83.78, 0.26]}
 ]
 
-# بيانات الأجهزة (من جداول الـ Census)
 device_timeline = [
     {"w": "Week 1 March", "census": 34, "occ": "85%", "vals": [7, 14, 14, 4.2]},
     {"w": "Week 2 March", "census": 25, "occ": "78%", "vals": [4, 15, 12, 4.8]},
@@ -79,10 +87,11 @@ device_timeline = [
 cur_pdf = pdf_timeline[st.session_state.step % len(pdf_timeline)]
 cur_dev = device_timeline[st.session_state.step % len(device_timeline)]
 
-# --- واجهة العرض ---
+# --- العرض ---
 st.markdown(f"<h1 style='text-align: center; color: #00d4ff; font-size: 50px; font-weight:900;'>ICU DASHBOARD</h1>", unsafe_allow_html=True)
 st.markdown(f"<p style='text-align: center; color: #FFD700; font-size: 20px; font-weight:bold;'>PERIOD: {cur_pdf['q']}</p>", unsafe_allow_html=True)
 
+# المربعات العلوية
 sq_names = ["Falls", "Injury Falls", "HAPI %", "CLABSI", "CAUTI", "VAE Rate"]
 c1 = st.columns(6)
 for i in range(len(sq_names)):
@@ -91,6 +100,7 @@ for i in range(len(sq_names)):
     with c1[i]:
         st.markdown(f'<div class="kpi-card">{m_bars}<div class="content-box"><div class="label-full">{sq_names[i]}</div><div class="val-full" style="color:{color}">{v}</div><div class="bm-full">BENCHMARK: {b}</div></div></div>', unsafe_allow_html=True)
 
+# الدوائر العلوية
 cir_names = ["Restraints", "VAE Rate", "Turnover", "Nurse Hr", "RN Edu", "C-Diff"]
 c2 = st.columns(6)
 for i in range(len(cir_names)):
@@ -102,6 +112,7 @@ for i in range(len(cir_names)):
 
 st.markdown("<hr style='border-color:#111; margin:30px 0;'>", unsafe_allow_html=True)
 
+# الجزء السفلي (الأجهزة)
 col_left, col_right = st.columns([2.2, 1.8])
 with col_left:
     l_c1, l_c2 = st.columns(2)
@@ -110,28 +121,31 @@ with col_left:
     
     st.markdown(f'<div class="side-header">DEVICES ({cur_dev["w"]})</div>', unsafe_allow_html=True)
     g_cols = st.columns(4)
-    dev_info = [("Pt with ETT", 36, [10, 18]), ("Pt with Foley", 36, [24, 30]), ("Pt with CVC", 36, [16, 22]), ("Avg Stay", 10, [4, 6])]
+    dev_info = [("Pt with ETT", "#00ffaa"), ("Pt with Foley", "#FFD700"), ("Pt with CVC", "#ff4b4b"), ("Avg Stay", "#00d4ff")]
+    
     for i in range(4):
         with g_cols[i]:
-            fig = go.Figure(go.Indicator(
-                mode = "gauge+number", value = cur_dev['vals'][i],
-                number = {'font': {'size': 30, 'color': '#fff'}},
-                gauge = {'axis': {'range': [None, dev_info[i][1]], 'tickvals': []}, 'bar': {'color': "#222"}, 'bgcolor': "rgba(0,0,0,0)",
-                         'steps': [{'range': [0, dev_info[i][2][0]], 'color': "#00ffaa"}, {'range': [dev_info[i][2][0], dev_info[i][2][1]], 'color': "#FFD700"}, {'range': [dev_info[i][2][1], dev_info[i][1]], 'color': "#ff4b4b"}]}
-            ))
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(t=10, b=0, l=10, r=10), height=110)
-            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-            st.markdown(f'<div class="gauge-label-bottom">{dev_info[i][0]}</div>', unsafe_allow_html=True)
+            # استخدام HTML خالص لمنع الوميض الناتج عن Plotly
+            st.markdown(f"""
+                <div class="device-gauge-box">
+                    <div class="device-val">{cur_dev['vals'][i]}</div>
+                    <div class="device-label">
+                        <span class="status-dot" style="background:{dev_info[i][1]}"></span>
+                        {dev_info[i][0]}
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
 
 with col_right:
     st.markdown(f'<div class="side-header" style="margin-left:20px;">ANALYTICS ({cur_pdf["q"]})</div>', unsafe_allow_html=True)
     fig_bar = go.Figure()
     fig_bar.add_trace(go.Bar(x=sq_names, y=cur_pdf['sq'], name="Unit", marker_color='#00d4ff'))
     fig_bar.add_trace(go.Bar(x=sq_names, y=cur_pdf['sq_bm'], name="BM", marker_color='#1a1a1a'))
-    fig_bar.update_layout(height=380, barmode='group', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(t=20, b=20, l=0, r=0), legend=dict(font=dict(color="#888"), orientation="h", y=1.2))
+    fig_bar.update_layout(height=340, barmode='group', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', 
+                          margin=dict(t=20, b=20, l=0, r=0), showlegend=False)
     st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
 
-# تحديث الصفحة بالكامل كل 10 ثوانٍ
+# التحديث التلقائي كل 10 ثوانٍ
 time.sleep(10)
 st.session_state.step += 1
 st.rerun()
