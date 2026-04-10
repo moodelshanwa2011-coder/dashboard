@@ -5,7 +5,7 @@ import time
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="ICU Dashboard", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. CSS - الأعمدة الملونة والتصميم الثابت
+# 2. CSS - التصميم المعتمد بدون تغيير
 st.markdown("""
     <style>
     [data-testid="stAppViewContainer"] { background-color: #000000; color: #ffffff; }
@@ -56,7 +56,7 @@ m_bars = '<div class="visualizer"><div class="v-bar"></div><div class="v-bar"></
 # 3. إدارة البيانات
 if 'step' not in st.session_state: st.session_state.step = 0
 
-# --- بيانات الجزء العلوي والبار (PDF) ---
+# --- بيانات الجزء العلوي والبار (تدريجي للأمام) ---
 pdf_data = [
     {"q": "3Q 2024", "sq": [0.36, 0.36, 6.90, 2.63, 1.02, 0.00], "sq_bm": [0.28, 0.05, 4.60, 1.20, 0.40, 1.89],
      "cir": [20.69, 0.00, 4.69, 12.54, 68.25, 0.00], "cir_bm": [6.32, 1.89, 4.51, 19.20, 83.36, 0.25]},
@@ -64,14 +64,14 @@ pdf_data = [
      "cir": [12.50, 6.69, 1.43, 12.87, 70.00, 0.00], "cir_bm": [8.23, 1.91, 3.97, 19.15, 83.78, 0.26]}
 ]
 
-# --- بيانات جزء الأجهزة (صور الإكسيل) ---
+# --- بيانات الأجهزة (تدريجي للأمام من مارس لأبريل) ---
 device_data = [
     {"w": "Week 1 March", "census": 34, "occ": "85%", "vals": [7, 14, 14, 4.2]},
     {"w": "Week 2 March", "census": 25, "occ": "78%", "vals": [4, 15, 12, 4.8]},
     {"w": "Week 1 April", "census": 16, "occ": "68%", "vals": [1, 8, 6, 3.8]}
 ]
 
-# اختيار البيانات بناءً على الخطوة الحالية
+# الاختيار بناءً على Step
 cur_pdf = pdf_data[st.session_state.step % len(pdf_data)]
 cur_dev = device_data[st.session_state.step % len(device_data)]
 
@@ -124,7 +124,6 @@ with col_left:
             st.markdown(f'</div><div class="gauge-label-bottom">{name}</div>', unsafe_allow_html=True)
 
 with col_right:
-    # البار مرتبط ببيانات الـ PDF العلوية
     st.markdown(f'<div class="side-header" style="margin-left:20px;">PERFORMANCE ANALYTICS ({cur_pdf["q"]})</div>', unsafe_allow_html=True)
     fig_bar = go.Figure()
     fig_bar.add_trace(go.Bar(x=sq_names, y=cur_pdf['sq'], name="Current", marker_color='#00d4ff'))
