@@ -5,7 +5,7 @@ import time
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="ICU Dashboard", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. CSS - التصميم النيون المعتمد
+# 2. CSS - التصميم المعتمد (ثابت تماماً)
 st.markdown("""
     <style>
     [data-testid="stAppViewContainer"] { background-color: #000000; color: #ffffff; }
@@ -20,6 +20,7 @@ st.markdown("""
     .v-bar:nth-child(4) { background: #00ffaa; animation-delay: 0.4s; }
     .v-bar:nth-child(5) { background: #ff4b4b; animation-delay: 0.1s; }
     @keyframes bounce { 0%, 100% { height: 30%; } 50% { height: 100%; } }
+
     .kpi-card, .circle-container {
         position: relative; background-color: #0a0a0a; border-radius: 20px;
         overflow: hidden; display: flex; flex-direction: column; justify-content: center;
@@ -52,11 +53,10 @@ st.markdown("""
 
 m_bars = '<div class="visualizer"><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div></div>'
 
-# 3. إدارة البيانات - التسلسل الزمني
-if 'step' not in st.session_state: 
-    st.session_state.step = 0
+# 3. إدارة البيانات
+if 'step' not in st.session_state: st.session_state.step = 0
 
-# قائمة الـ Quarters بالترتيب التصاعدي
+# قائمة الـ Quarters (التسلسل الزمني التصاعدي)
 pdf_timeline = [
     {"q": "4Q 2023", "sq": [0.00, 0.00, 3.85, 1.25, 0.50, 0.00], "sq_bm": [0.04, 0.03, 4.20, 1.15, 0.38, 1.80], "cir": [15.20, 0.00, 5.21, 10.50, 67.19, 0.00], "cir_bm": [5.50, 1.80, 4.80, 18.50, 83.53, 0.20]},
     {"q": "1Q 2024", "sq": [0.24, 0.00, 4.50, 1.10, 0.45, 0.11], "sq_bm": [0.09, 0.04, 4.30, 1.18, 0.42, 1.85], "cir": [18.40, 0.11, 4.84, 11.20, 82.99, 0.16], "cir_bm": [6.10, 1.85, 4.49, 18.90, 70.31, 0.22]},
@@ -66,7 +66,7 @@ pdf_timeline = [
     {"q": "1Q 2025", "sq": [1.59, 0.80, 4.17, 3.02, 0.00, 6.69], "sq_bm": [0.12, 0.03, 4.96, 1.26, 0.43, 1.91], "cir": [12.50, 6.69, 1.43, 12.87, 70.00, 0.00], "cir_bm": [8.23, 1.91, 3.97, 19.15, 83.78, 0.26]}
 ]
 
-# قائمة الأسابيع (مارس 1->4 ثم أبريل 1->2)
+# قائمة الأسابيع (الترتيب التدريجي: مارس 1-4 ثم أبريل 1-2)
 device_timeline = [
     {"w": "Week 1 March", "census": 34, "occ": "85%", "vals": [7, 14, 14, 4.2]},
     {"w": "Week 2 March", "census": 25, "occ": "78%", "vals": [4, 15, 12, 4.8]},
@@ -81,7 +81,8 @@ cur_dev = device_timeline[st.session_state.step % len(device_timeline)]
 
 # --- العرض ---
 st.markdown(f"<h1 style='text-align: center; color: #00d4ff; font-size: 50px; font-weight:900;'>ICU DASHBOARD</h1>", unsafe_allow_html=True)
-st.markdown(f"<p style='text-align: center; color: #FFD700; font-size: 20px; font-weight:bold;'>TIMELINE: {cur_pdf['q']} | {cur_dev['w']}</p>", unsafe_allow_html=True)
+# تم تعديل السطر التالي ليشمل الـ Q فقط
+st.markdown(f"<p style='text-align: center; color: #FFD700; font-size: 20px; font-weight:bold;'>PERIOD: {cur_pdf['q']}</p>", unsafe_allow_html=True)
 
 sq_names = ["Falls", "Injury Falls", "HAPI %", "CLABSI", "CAUTI", "VAE Rate"]
 c1 = st.columns(6)
@@ -108,6 +109,7 @@ with col_left:
     with l_c1: st.markdown(f'<div class="census-box-mini">{m_bars}<div style="position:relative; z-index:10;"><div style="color:#555; font-size:12px; font-weight:bold;">CENSUS</div><div style="color:#FFD700; font-size:38px; font-weight:900;">{cur_dev["census"]}</div></div></div>', unsafe_allow_html=True)
     with l_c2: st.markdown(f'<div class="census-box-mini" style="border-color:#00d4ff;">{m_bars}<div style="position:relative; z-index:10;"><div style="color:#555; font-size:12px; font-weight:bold;">OCCUPANCY</div><div style="color:#00d4ff; font-size:38px; font-weight:900;">{cur_dev["occ"]}</div></div></div>', unsafe_allow_html=True)
     
+    # اسم الأسبوع يظهر هنا فقط ليعرف المستخدم أي أسبوع يتم عرضه حالياً
     st.markdown(f'<div class="side-header">DEVICES ({cur_dev["w"]})</div>', unsafe_allow_html=True)
     g_cols = st.columns(4)
     dev_info = [("Pt with ETT", 36, [10, 18]), ("Pt with Foley", 36, [24, 30]), ("Pt with CVC", 36, [16, 22]), ("Avg Stay", 10, [4, 6])]
@@ -131,7 +133,7 @@ with col_right:
     fig_bar.update_layout(height=380, barmode='group', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(t=20, b=20, l=0, r=0), legend=dict(font=dict(color="#888"), orientation="h", y=1.2))
     st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
 
-# التحديث
+# التحديث التلقائي كل 10 ثوانٍ
 time.sleep(10)
 st.session_state.step += 1
 st.rerun()
